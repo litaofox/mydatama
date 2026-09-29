@@ -1,0 +1,25 @@
+# 排除大体积安装包与解压目录（通过链接或文档说明获取，不入库）
+tools/DockerDesktopInstaller.exe
+tools/dataease_2.10.26_win_amd64.zip
+tools/DataEase/
+
+# 排除临时/系统文件
+*.tmp
+*.log
+Thumbs.db
+.DS_Store
+
+# IDE 配置
+.idea/
+.vscode/
+*.iml
+
+# 构建产物
+target/
+build/
+dist/
+*.jar
+*.class
+__pycache__/
+*.pyc
+node_modules/
