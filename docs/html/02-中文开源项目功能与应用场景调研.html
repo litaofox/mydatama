@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>中文开源项目功能与应用场景调研</title>
+<style>
+:root{
+  --primary:#1f5fbf; --primary-dark:#174a96; --bg:#f4f6fa; --card:#ffffff;
+  --text:#1f2733; --muted:#667085; --border:#e3e8f0; --code-bg:#1e2530;
+  --accent-bg:#eef4ff; --th-bg:#1f5fbf; --th-text:#fff;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.85;font-size:16px;}
+.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:var(--primary-dark);
+  color:#fff;display:flex;align-items:center;padding:0 20px;z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.topbar .home{color:#fff;text-decoration:none;font-size:14px;opacity:.85;margin-right:18px;white-space:nowrap;}
+.topbar .home:hover{opacity:1;}
+.topbar .title{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.layout{display:flex;max-width:1280px;margin:56px auto 0;}
+.toc{width:260px;flex-shrink:0;padding:24px 0 24px 20px;}
+.toc-inner{position:sticky;top:76px;max-height:calc(100vh - 100px);overflow-y:auto;
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 14px;}
+.toc-inner .toc-title{font-size:13px;font-weight:700;color:var(--muted);
+  letter-spacing:1px;margin:0 0 10px 4px;}
+.toc-inner ul{list-style:none;margin:0;padding:0;}
+.toc-inner ul ul{padding-left:14px;}
+.toc-inner li{margin:3px 0;}
+.toc-inner a{display:block;color:#44506a;text-decoration:none;font-size:13.5px;
+  line-height:1.5;padding:3px 8px;border-radius:6px;border-left:2px solid transparent;}
+.toc-inner a:hover{background:var(--accent-bg);color:var(--primary);}
+.content{flex:1;min-width:0;background:var(--card);margin:20px 24px 60px;padding:40px 52px;
+  border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 1px 4px rgba(16,42,90,.05);}
+h1{font-size:28px;color:var(--primary-dark);border-bottom:3px solid var(--primary);
+  padding-bottom:14px;margin-top:0;}
+h2{font-size:22px;color:var(--primary-dark);margin-top:42px;
+  border-left:5px solid var(--primary);padding-left:12px;}
+h3{font-size:18px;color:#28456e;margin-top:32px;}
+h4{font-size:16px;color:#344054;margin-top:24px;}
+p{margin:14px 0;}
+blockquote{margin:18px 0;padding:12px 18px;background:var(--accent-bg);
+  border-left:4px solid var(--primary);color:#3d4a5c;border-radius:0 8px 8px 0;}
+blockquote p{margin:6px 0;}
+a{color:var(--primary);}
+ul,ol{padding-left:26px;}
+li{margin:5px 0;}
+code{font-family:Consolas,"Courier New",monospace;font-size:13.5px;
+  background:#eef1f6;color:#b02a5e;padding:2px 6px;border-radius:4px;}
+pre{background:var(--code-bg);color:#d7e0ee;border-radius:10px;padding:18px 20px;
+  overflow-x:auto;line-height:1.55;font-size:13.5px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);}
+pre code{background:none;color:inherit;padding:0;font-size:inherit;}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:14.5px;
+  box-shadow:0 1px 3px rgba(16,42,90,.08);border-radius:8px;overflow:hidden;}
+th{background:var(--th-bg);color:var(--th-text);font-weight:600;padding:10px 14px;
+  text-align:left;border:1px solid var(--primary);white-space:nowrap;}
+td{padding:9px 14px;border:1px solid var(--border);vertical-align:top;}
+tbody tr:nth-child(even){background:#f7f9fd;}
+tbody tr:hover{background:var(--accent-bg);}
+hr{border:none;border-top:1px solid var(--border);margin:36px 0;}
+strong{color:#16345f;}
+h1 strong,h2 strong,h3 strong{color:inherit;}
+.toc-btn{display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
+  color:#fff;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer;margin-right:12px;}
+@media (max-width:900px){
+  .toc{display:block;position:fixed;top:56px;left:0;bottom:0;width:280px;z-index:90;
+    padding:16px;background:var(--bg);transform:translateX(-100%);transition:transform .25s;
+    overflow-y:auto;}
+  .toc.open{transform:translateX(0);box-shadow:4px 0 16px rgba(0,0,0,.15);}
+  .toc-btn{display:inline-block;}
+  .content{margin:12px 10px 40px;padding:24px 18px;}
+  .topbar .title{font-size:13px;}
+  table{font-size:13px;display:block;overflow-x:auto;}
+}
+@media print{
+  .topbar,.toc{display:none;}
+  .layout{margin:0;}
+  .content{border:none;box-shadow:none;margin:0;padding:0;}
+  pre,table,blockquote{break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="toc-btn" onclick="document.querySelector('.toc').classList.toggle('open')">☰ 目录</button>
+  <a class="home" href="index.html">← 文档首页</a>
+  <span class="title">中文开源项目功能与应用场景调研</span>
+</div>
+<div class="layout">
+  <aside class="toc"><div class="toc-inner">
+    <p class="toc-title">目录导航</p>
+    
+<ul>
+<li><a href="#_1">中文开源项目功能与应用场景调研</a><ul>
+<li><a href="#1">1. 调研对象总览</a></li>
+<li><a href="#2">2. 项目逐项分析</a><ul>
+<li><a href="#21-alldata">2.1 AllData —— 功能最全的国产"数据中台"开源项目</a></li>
+<li><a href="#22-larkmidtable-flink">2.2 LarkMidTable —— Flink 技术体系的一站式数据中台</a></li>
+<li><a href="#23-dataspherestudiodss">2.3 DataSphereStudio（DSS）—— 微众银行的数据应用开发门户</a></li>
+<li><a href="#24-qdata">2.4 qData —— 轻量级数据中台</a></li>
+<li><a href="#25-qualitis">2.5 Qualitis —— 专业数据质量平台</a></li>
+<li><a href="#26-apache-dolphinscheduler">2.6 Apache DolphinScheduler —— 国产顶级分布式调度</a></li>
+<li><a href="#27-dataease-bi">2.7 DataEase —— 国产开源 BI 第一梯队</a></li>
+<li><a href="#28-datagear-bi">2.8 DataGear —— 轻量级可视化 BI</a></li>
+<li><a href="#29-ruoyi-cloud-plus-yudao-cloud">2.9 RuoYi-Cloud-Plus / yudao-cloud（芋道）—— 管理后台与微服务底座</a></li>
+<li><a href="#210-sa-token">2.10 Sa-Token —— 轻量认证授权框架</a></li>
+<li><a href="#211">2.11 补充参照：非中文但不可回避的项目</a></li>
+</ul>
+</li>
+<li><a href="#3">3. 横向对比</a><ul>
+<li><a href="#31">3.1 功能覆盖矩阵</a></li>
+<li><a href="#32">3.2 技术栈与社区维度对比</a></li>
+<li><a href="#33">3.3 成熟度分级（综合生产案例、社区、文档、版本节奏）</a></li>
+</ul>
+</li>
+<li><a href="#4">4. 对本项目的选型建议</a></li>
+</ul>
+</li>
+</ul>
+
+  </div></aside>
+  <main class="content">
+<h1 id="_1">中文开源项目功能与应用场景调研</h1>
+<blockquote>
+<p>版本：V1.0　编制日期：2026-09-30
+数据说明：Star/版本数据基于 2026-09-29～30 的 GitHub/Gitee 公开页面调研，星标数随时间变化，引用时以官方仓库实时数据为准。
+调研对象：面向数据中台各功能域（采集集成、治理、质量、调度、可视化、权限底座）的主流中文开源项目，另附非中文但不可回避的国际项目作参照。</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 调研对象总览</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>项目</th>
+<th>仓库</th>
+<th>量级（Star）</th>
+<th>许可证</th>
+<th>在中台中的角色</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>AllData</strong></td>
+<td>github.com/alldatacenter/alldata</td>
+<td>GitHub 3.1k+</td>
+<td>开源可商用（需核 LICENSE）</td>
+<td>一站式数据中台（集成+治理+质量+服务+可视化）</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>LarkMidTable</strong></td>
+<td>Gitee（GVP 认证）</td>
+<td>Gitee 2.7k</td>
+<td>Apache-2.0</td>
+<td>一站式数据中台（Flink 系）</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>DataSphereStudio（DSS）</strong></td>
+<td>Gitee（微众银行，GVP）</td>
+<td>Gitee 2.4k</td>
+<td>Apache-2.0</td>
+<td>数据应用开发门户（编排 Linkis 生态）</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>qData</strong></td>
+<td>Gitee</td>
+<td>Gitee 1.5k+</td>
+<td>开源</td>
+<td>轻量数据中台/ETL+资产+质量+API</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Qualitis</strong></td>
+<td>Gitee（微众银行，GVP）</td>
+<td>GVP 项目</td>
+<td>Apache-2.0</td>
+<td>专业数据质量校验平台</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Apache DolphinScheduler</strong></td>
+<td>GitHub/Gitee（易观捐赠 ASF）</td>
+<td>GitHub 13k+ / Gitee 2.6k+</td>
+<td>Apache-2.0</td>
+<td>分布式工作流任务调度</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>DataEase</strong></td>
+<td>GitHub/Gitee（飞致云）</td>
+<td>Gitee 18k+</td>
+<td><strong>GPL-3.0</strong></td>
+<td>自助 BI 与数据可视化大屏</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>DataGear</strong></td>
+<td>Gitee</td>
+<td>Gitee 6.9k</td>
+<td>LGPL-3.0</td>
+<td>轻量 BI/数据可视化</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>RuoYi-Cloud-Plus / yudao-cloud</strong></td>
+<td>Gitee</td>
+<td>7.2k / 73.7k（芋道系合计超 18 万）</td>
+<td>MIT/MulanPSL</td>
+<td>微服务/单体管理后台底座（RBAC、审计）</td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>Sa-Token</strong></td>
+<td>Gitee/GitHub</td>
+<td>GitHub 49.4k</td>
+<td>Apache-2.0</td>
+<td>轻量认证授权框架</td>
+</tr>
+<tr>
+<td>参照</td>
+<td>Label Studio</td>
+<td>GitHub 20k+</td>
+<td>Apache-2.0（非中文，标注领域无中文替代）</td>
+<td>多模态数据标注</td>
+<td></td>
+</tr>
+<tr>
+<td>参照</td>
+<td>Apache Linkis</td>
+<td>Gitee/GitHub（微众，GVP）</td>
+<td>万级</td>
+<td>Apache-2.0</td>
+<td>计算中间件（DSS 的执行引擎）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2">2. 项目逐项分析</h2>
+<h3 id="21-alldata">2.1 AllData —— 功能最全的国产"数据中台"开源项目</h3>
+<p><strong>项目概况</strong>：定位"开源数据中台"，最新 V0.7.0（2026-09-17 发布），保持月级高频迭代；社区活跃（社区群 3700+ 人），提供官网、语雀产品手册、腾讯文档、readthedocs 多套中文资料，是国产同类中文文档最齐全的项目之一。</p>
+<p><strong>核心功能</strong>：</p>
+<ul>
+<li>数据汇聚/数据集成：离线同步（DataX）、实时同步（Flink CDC）；</li>
+<li>数据治理：元数据、数据标准、数据质量、数据血缘、数据资产；</li>
+<li>数据建模、主数据管理（MDM）；</li>
+<li>数据服务：库表/API 自动发布、接口鉴权与监控；</li>
+<li>可视化报表、数据大屏；</li>
+<li>系统管控：用户、角色、权限、租户、调度。</li>
+</ul>
+<p><strong>技术架构</strong>：Spring Boot + Spring Cloud 微服务（注册中心 Eureka 体系）+ MyBatis + Vue，前端采用 <strong>qiankun 微前端</strong>实现模块可插拔；数据加工依赖 DataX/Flink；支持国产化数据库与操作系统适配。</p>
+<p><strong>适用场景</strong>：需要一个"功能菜单齐全、中文界面、可二次开发"的数据治理/数据中台骨架，快速向客户演示或交付政务/企业数据中台项目。</p>
+<p><strong>局限性</strong>：</p>
+<ul>
+<li>微服务模块多，完整部署资源占用较大（需 MySQL + 多服务 + 可选 Flink 集群），不适合 8GB 内存级的轻量演示；</li>
+<li>社区版与商业版边界需仔细核对，部分高级能力可能仅在商业版；</li>
+<li>强于<strong>结构化数据</strong>治理，不覆盖 IoT 时序、视频/图像等多模态数据，也不含数据标注；</li>
+<li>代码工程庞大，深度二开需要较长熟悉周期。</li>
+</ul>
+<p><strong>成熟度评估</strong>：★★★★（功能成熟度高、文档全、迭代活跃）；<strong>社区活跃度</strong>：★★★★；<strong>可扩展性</strong>：★★★★（微前端+微服务，插拔性好）。</p>
+<hr />
+<h3 id="22-larkmidtable-flink">2.2 LarkMidTable —— Flink 技术体系的一站式数据中台</h3>
+<p><strong>项目概况</strong>：Gitee GVP（最有价值开源项目）认证，Apache-2.0 许可，商业化公司运营。</p>
+<p><strong>核心功能</strong>：数据集成、数据治理（元数据/血缘/标准）、数据开发（SQL/任务 IDE）、数据质量、监控告警、数据服务（API）、可视化大屏，覆盖数据中台主要环节。</p>
+<p><strong>技术架构</strong>：以 <strong>Apache Flink</strong> 为实时计算内核，集成 DataX 做离线同步；Java 微服务后端 + Vue 前端。</p>
+<p><strong>适用场景</strong>：实时性要求高的数据中台（实时数仓、实时风控数据加工），团队具备 Flink 运维能力时尤为合适。</p>
+<p><strong>局限性</strong>：</p>
+<ul>
+<li>功能广度略逊于 AllData，文档和社区声量较小；</li>
+<li>强依赖 Flink/大数据生态，小规模部署偏重；</li>
+<li>同样只面向结构化/半结构化数据，无多模态与标注能力。</li>
+</ul>
+<p><strong>成熟度</strong>：★★★☆；<strong>社区活跃度</strong>：★★★☆（GVP 背书、商业公司维护）；<strong>可扩展性</strong>：★★★★（Flink 生态连接器丰富）。</p>
+<hr />
+<h3 id="23-dataspherestudiodss">2.3 DataSphereStudio（DSS）—— 微众银行的数据应用开发门户</h3>
+<p><strong>项目概况</strong>：微众银行开源、Gitee GVP、Apache-2.0，已在金融行业规模化验证。</p>
+<p><strong>核心功能</strong>：把数据交换、<strong>脱敏清洗</strong>、分析挖掘、可视化、质量检测、工作流调度、数据输出等能力以"工作空间 + 工作流编排"方式串联，是数据开发人员的一站式 IDE 门户。</p>
+<p><strong>技术架构</strong>：本身是<strong>门户与编排层</strong>，执行依赖同属微众开源生态的 <strong>Apache Linkis</strong> 计算中间件（对接 Hive/Spark/Flink/Presto 等），Java + Vue。</p>
+<p><strong>适用场景</strong>：已有 Hadoop/Spark 大数据集群，需要统一数据开发入口和数据流程编排的中大型企业。</p>
+<p><strong>局限性</strong>：</p>
+<ul>
+<li><strong>不能独立使用</strong>，必须搭 Linkis 及底层大数据集群，部署运维门槛高、资源占用大；</li>
+<li>面向数据工程师而非业务人员；</li>
+<li>不做资产目录/数据服务市场，也不覆盖 IoT 与多模态场景。</li>
+</ul>
+<p><strong>成熟度</strong>：★★★★（金融生产验证）；<strong>社区活跃度</strong>：★★★（更新节奏放缓，进入稳定维护期）；<strong>可扩展性</strong>：★★★☆（强绑定 Linkis 生态）。</p>
+<hr />
+<h3 id="24-qdata">2.4 qData —— 轻量级数据中台</h3>
+<p><strong>项目概况</strong>：千桐科技开源，Gitee 1.5k+ Star，更新非常活跃。</p>
+<p><strong>核心功能</strong>：ETL 数据集成、元数据管理、数据质量、数据资产、数据 API 服务、可视化，并提供"AI 问数"（自然语言查询）能力。</p>
+<p><strong>技术架构</strong>：Java + Vue，体量比 AllData 轻，单体/小集群即可运行。</p>
+<p><strong>适用场景</strong>：中小团队希望以较低成本获得"集成+治理+质量+API+可视化"组合，或作为学习数据中台工程实现的参考。</p>
+<p><strong>局限性</strong>：社区规模与文档体系不及 AllData；生产级大规模案例较少；同样无多模态能力。</p>
+<p><strong>成熟度</strong>：★★★；<strong>社区活跃度</strong>：★★★★（提交频繁）；<strong>可扩展性</strong>：★★★。</p>
+<hr />
+<h3 id="25-qualitis">2.5 Qualitis —— 专业数据质量平台</h3>
+<p><strong>项目概况</strong>：微众银行开源、Gitee GVP、Apache-2.0，定位单一而明确：<strong>多源异构数据质量校验</strong>。</p>
+<p><strong>核心功能</strong>：质量模型定义（完整性、正确性、一致性、枚举值、正则、自定义 SQL 等规则模板）、质检任务调度、质量报告与告警、质量大盘。</p>
+<p><strong>技术架构</strong>：Java + Spring + Vue，规则持久化到关系库，任务对接调度引擎（可与 DSS/DolphinScheduler 联动）。</p>
+<p><strong>适用场景</strong>：已有数据平台但缺少体系化质量管控，需要专业质检引擎的项目。</p>
+<p><strong>局限性</strong>：只解决质量一个点，不含采集/资产/服务，需要与其他系统组合；规则模型偏表级 SQL 校验，不适用视频等非结构化质量检查。</p>
+<p><strong>成熟度</strong>：★★★★（规则引擎成熟）；<strong>社区活跃度</strong>：★★★；<strong>可扩展性</strong>：★★★（规则模板可自定义）。</p>
+<hr />
+<h3 id="26-apache-dolphinscheduler">2.6 Apache DolphinScheduler —— 国产顶级分布式调度</h3>
+<p><strong>项目概况</strong>：易观数据捐赠给 Apache 软件基金会的顶级项目，GitHub 13k+ Star，<strong>中文文档与中文社区在所有项目中最强</strong>，Apache-2.0。</p>
+<p><strong>核心功能</strong>：可视化 DAG 工作流编排、多任务类型（Shell/SQL/Spark/Flink/DataX/HTTP/Python 等数十种插件）、定时调度、依赖触发、失败重跑、补数、多租户、告警（钉钉/邮件/短信等）、HA 去中心化架构。</p>
+<p><strong>技术架构</strong>：Java（Master/Worker 去中心化）+ ZooKeeper 协调 + 关系库存元数据，支持 Kubernetes。</p>
+<p><strong>适用场景</strong>：所有需要定时/依赖编排数据处理流程的项目——本项目中"夜间批量轨迹质量校验、月度保费评分计算、报告生成"都可由它驱动。</p>
+<p><strong>局限性</strong>：是调度工具而非中台，不含治理/资产/可视化；引入需增加一个服务组件（约 500MB–1GB 内存，HA 模式更多）。</p>
+<p><strong>成熟度</strong>：★★★★★（Apache 顶级、数千家企业生产使用）；<strong>社区活跃度</strong>：★★★★★；<strong>可扩展性</strong>：★★★★★（SPI 插件体系）。</p>
+<hr />
+<h3 id="27-dataease-bi">2.7 DataEase —— 国产开源 BI 第一梯队</h3>
+<p><strong>项目概况</strong>：飞致云（FIT2CLOUD）出品，Gitee 18k+ Star，V2 版本，中文文档与模板生态极好。</p>
+<p><strong>核心功能</strong>：多数据源接入、数据集建模、拖拽式仪表板、<strong>数据大屏</strong>、200+ 图表与模板、定时报告、分享与行列级权限、AI 问数。</p>
+<p><strong>技术架构</strong>：V2 为前后端一体的 Spring Boot 应用 + 自带 <strong>MySQL 8</strong>（强制，innodb_buffer_pool 1GB）；桌面版为 Electron 绿色包。</p>
+<p><strong>适用场景</strong>：需要自助分析与精美大屏、且允许独立 BI 系统存在的项目；桌面版适合个人试玩与小团队。</p>
+<p><strong>局限性</strong>：</p>
+<ul>
+<li><strong>GPL-3.0 许可证</strong>：若仅内部部署使用无问题，但与其深度集成/二次分发需评估 copyleft 义务；</li>
+<li>资源开销：服务端核心容器 + MySQL 实测量级约 <strong>3–4GB 内存</strong>，8GB 机器勉强；</li>
+<li>社区版 SSO 能力有限，嵌入统一门户多为 iframe 方式（两套登录）；</li>
+<li>不做数据治理/集成，是纯消费端。</li>
+</ul>
+<p><strong>成熟度</strong>：★★★★★；<strong>社区活跃度</strong>：★★★★★；<strong>可扩展性</strong>：★★★☆（插件市场但 UI 风格自成体系）。</p>
+<hr />
+<h3 id="28-datagear-bi">2.8 DataGear —— 轻量级可视化 BI</h3>
+<p><strong>项目概况</strong>：Gitee 6.9k Star，LGPL-3.0。</p>
+<p><strong>核心功能</strong>：多数据源 SQL 数据集、图表与仪表板、数据大屏（支持 HTML/JS 自定义）、简单报表。</p>
+<p><strong>技术架构</strong>：Java 单体 + 内置数据库（可切换 MySQL），<strong>一个 Jar 即可运行</strong>，极轻量。</p>
+<p><strong>适用场景</strong>：资源受限场景下快速出图/出大屏，或把图表能力嵌入已有 Java 系统。</p>
+<p><strong>局限性</strong>：功能深度、图表美观度、交互能力明显弱于 DataEase；自助分析与治理能力缺失；LGPL 许可证对集成有一定约束。</p>
+<p><strong>成熟度</strong>：★★★☆；<strong>社区活跃度</strong>：★★★；<strong>可扩展性</strong>：★★★。</p>
+<hr />
+<h3 id="29-ruoyi-cloud-plus-yudao-cloud">2.9 RuoYi-Cloud-Plus / yudao-cloud（芋道）—— 管理后台与微服务底座</h3>
+<p><strong>项目概况</strong>：国内装机量最大的企业级脚手架家族。RuoYi-Cloud-Plus（Gitee 7.2k，Spring Cloud Alibaba 版）；芋道 yudao-cloud/ruoyi-vue-pro（Gitee 73.7k / 111.7k）。</p>
+<p><strong>核心功能（开箱即用）</strong>：用户/角色/菜单/部门、<strong>RBAC 动态权限 + 数据权限</strong>、操作审计日志、登录日志、字典管理、代码生成、工作流（芋道）、多租户、短信/文件/通知等通用服务。</p>
+<p><strong>技术架构</strong>：RuoYi-Cloud-Plus = Spring Cloud Alibaba（Gateway + Nacos + Sentinel + Seata 可选）+ MyBatis-Plus + Redis + Vue3；芋道提供单体与微服务双版本。</p>
+<p><strong>适用场景</strong>：作为任何业务系统的<strong>权限与管理底座</strong>，避免重写用户体系；本项目的管理端、企业端、坐席端用户与权限均可直接复用。</p>
+<p><strong>局限性</strong>：</p>
+<ul>
+<li>是脚手架不是数据中台，数据类功能为零；</li>
+<li>Cloud 版组件多（Nacos/Redis 等），轻量演示可用其单体版本替代；</li>
+<li>代码生成器等模块对纯业务项目略冗余，需裁剪 UI；</li>
+<li>RuoYi 系部分仓库历史上出现过许可证争议，商用前需确认所采用具体版本的 LICENSE。</li>
+</ul>
+<p><strong>成熟度</strong>：★★★★★；<strong>社区活跃度</strong>：★★★★★（教程/问题解答极多）；<strong>可扩展性</strong>：★★★★。</p>
+<hr />
+<h3 id="210-sa-token">2.10 Sa-Token —— 轻量认证授权框架</h3>
+<p><strong>项目概况</strong>：GitHub 49.4k Star，Apache-2.0，国产权限框架代表作，文档为中文且质量很高。</p>
+<p><strong>核心功能</strong>：登录认证、会话管理、<strong>RBAC/权限码/通配符鉴权</strong>、网关统一鉴权、单点登录、OAuth2、多账号体系、API Key 签名、临时 Token、二级认证。</p>
+<p><strong>技术架构</strong>：一个轻量 Java 库（Jar），可接入 Redis（集群）或内存（单机），与 Spring Boot/WebFlux/Solon 集成，<strong>不强制任何中间件</strong>。</p>
+<p><strong>适用场景</strong>：自研业务服务时替代手写 JWT/Security 拦截逻辑；在 Lite 架构（无 Redis 单体）下也能以内存模式运行，后续扩集群再接 Redis。</p>
+<p><strong>局限性</strong>：只解决认证授权"机制"，用户/角色表、管理页面仍需自建（可搭配 RuoYi 单体版补齐）。</p>
+<p><strong>成熟度</strong>：★★★★★；<strong>社区活跃度</strong>：★★★★★；<strong>可扩展性</strong>：★★★★☆。</p>
+<hr />
+<h3 id="211">2.11 补充参照：非中文但不可回避的项目</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>角色</th>
+<th>为何提及</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Label Studio</strong>（Apache-2.0，20k+）</td>
+<td>多模态标注平台</td>
+<td>文本/图像/音频/视频/时序全模态标注，中文界面可用；<strong>国内无同量级开源替代</strong>，本项目驾驶行为视频/图像标注的首选集成对象。社区版无 RBAC，需网关包鉴权</td>
+</tr>
+<tr>
+<td><strong>OpenMetadata</strong>（15.2k）/ <strong>DataHub</strong>（12.7k，LinkedIn）</td>
+<td>国际主流数据目录</td>
+<td>资产目录+字段级血缘+数据质量一体，但底座重（PG+ES，DataHub 还需 Kafka），4GB+ 内存，适合二期大规模治理</td>
+</tr>
+<tr>
+<td><strong>Apache Ranger</strong></td>
+<td>大数据权限治理</td>
+<td>RBAC+ABAC+标签策略+集中审计，面向 Hive/HDFS 等组件，等保合规参考价值高，但不适用于应用级表权限</td>
+</tr>
+<tr>
+<td><strong>Great Expectations / Soda Core</strong></td>
+<td>数据质量框架</td>
+<td>声明式质检规则 DSL，结构化质检引擎可借鉴其规则设计</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3">3. 横向对比</h2>
+<h3 id="31">3.1 功能覆盖矩阵</h3>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>AllData</th>
+<th>LarkMid</th>
+<th>DSS</th>
+<th>qData</th>
+<th>Qualitis</th>
+<th>DolphinScheduler</th>
+<th>DataEase</th>
+<th>DataGear</th>
+<th>RuoYi系</th>
+<th>Sa-Token</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据集成/ETL</td>
+<td>●</td>
+<td>●</td>
+<td>◐(Linkis)</td>
+<td>●</td>
+<td>○</td>
+<td>○(调度插件)</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+</tr>
+<tr>
+<td>实时计算</td>
+<td>◐(Flink)</td>
+<td>●</td>
+<td>◐</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+</tr>
+<tr>
+<td>元数据/血缘</td>
+<td>●</td>
+<td>●</td>
+<td>○</td>
+<td>●</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+</tr>
+<tr>
+<td>数据标准/资产</td>
+<td>●</td>
+<td>●</td>
+<td>○</td>
+<td>●</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+</tr>
+<tr>
+<td>数据质量</td>
+<td>●</td>
+<td>●</td>
+<td>◐</td>
+<td>●</td>
+<td>●</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+</tr>
+<tr>
+<td>任务调度</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>◐</td>
+<td>◐</td>
+<td>●</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+</tr>
+<tr>
+<td>数据服务 API</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+</tr>
+<tr>
+<td>BI/大屏</td>
+<td>●</td>
+<td>●</td>
+<td>◐</td>
+<td>●</td>
+<td>○</td>
+<td>○</td>
+<td>●</td>
+<td>●</td>
+<td>○</td>
+<td>○</td>
+</tr>
+<tr>
+<td>RBAC/审计</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>◐</td>
+<td>●</td>
+<td>●(机制)</td>
+</tr>
+<tr>
+<td>IoT/时序/视频</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+</tr>
+<tr>
+<td>数据标注</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+</tr>
+<tr>
+<td>轻量可单机</td>
+<td>◐</td>
+<td>○</td>
+<td>○</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>◐</td>
+<td>●</td>
+<td>●(单体版)</td>
+<td>●</td>
+</tr>
+</tbody>
+</table>
+<p>（●完整支持　◐部分/依赖其他组件　○不具备）</p>
+<p><strong>关键结论</strong>：所有国产数据中台项目<strong>集体缺失"多模态 + IoT 时序 + 标注"能力</strong>——这恰好是本项目（北斗轨迹 + 驾驶视频 + 行为标注）的核心特色，必须自研或集成专业组件补齐，没有"拿来即用"的整包方案。</p>
+<h3 id="32">3.2 技术栈与社区维度对比</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>倾向 Spring 生态</th>
+<th>强依赖大数据生态</th>
+<th>轻量单体</th>
+<th>文档中文友好度</th>
+<th>许可证宽松度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>集成/治理类</td>
+<td>AllData、qData</td>
+<td>LarkMid(Flink)、DSS+Linkis</td>
+<td>qData</td>
+<td>AllData 最优</td>
+<td>Apache 系（Lark/DSS/Qualitis/DS）最宽松；AllData 需核对</td>
+</tr>
+<tr>
+<td>可视化</td>
+<td>DataEase、DataGear</td>
+<td>—</td>
+<td>DataGear</td>
+<td>两者均优</td>
+<td>DataGear LGPL、DataEase <strong>GPL</strong> 需注意</td>
+</tr>
+<tr>
+<td>底座类</td>
+<td>RuoYi 系、Sa-Token</td>
+<td>—</td>
+<td>Sa-Token</td>
+<td>优</td>
+<td>MIT/Apache，宽松</td>
+</tr>
+</tbody>
+</table>
+<h3 id="33">3.3 成熟度分级（综合生产案例、社区、文档、版本节奏）</h3>
+<ul>
+<li><strong>第一梯队（可放心生产采用）</strong>：DolphinScheduler、DataEase、RuoYi 系、Sa-Token、DSS（限大数据团队）；</li>
+<li><strong>第二梯队（可用于项目骨架或二开，需投入验证）</strong>：AllData、Qualitis、LarkMidTable；</li>
+<li><strong>第三梯队（轻量场景或参考学习）</strong>：qData、DataGear。</li>
+</ul>
+<hr />
+<h2 id="4">4. 对本项目的选型建议</h2>
+<p>结合北斗项目"轨迹时序 + 视频多模态 + 敏感数据合规 + 保险数据服务 + 轻量演示起步"的特点，给出分层组合建议：</p>
+<table>
+<thead>
+<tr>
+<th>项目层</th>
+<th>推荐</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>权限/管理底座</td>
+<td><strong>Sa-Token + RuoYi 单体版思想</strong>（或直接裁剪 RuoYi 单体）</td>
+<td>RBAC、数据权限、审计日志开箱即用；轻量、无重中间件</td>
+</tr>
+<tr>
+<td>数据治理/资产/质量参考</td>
+<td><strong>AllData 作为功能蓝本与对标</strong>，轻量版自研</td>
+<td>中文菜单与流程最完整，便于需求对齐与演示对标；直接部署太重，按 MVP 策略自研轻量子集，二期评估接入</td>
+</tr>
+<tr>
+<td>批量调度</td>
+<td>一期用轻量调度；任务量上来后引入 <strong>DolphinScheduler</strong></td>
+<td>Apache 顶级、社区最强，风险最低</td>
+</tr>
+<tr>
+<td>大屏/BI</td>
+<td>演示/试点期 <strong>DataEase 桌面版或独立服务</strong>评估；正式产品自研 ECharts 大屏</td>
+<td>规避 GPL 与 3–4GB 内存、双登录问题；一屏统览页面需与风控业务深度联动，自研可控性更高</td>
+</tr>
+<tr>
+<td>视频/图像标注</td>
+<td><strong>Label Studio 容器集成</strong>（Apache-2.0）</td>
+<td>无中文替代；网关统一发 token 解决社区版无 RBAC 问题</td>
+</tr>
+<tr>
+<td>轨迹/视频接入与治理</td>
+<td><strong>自研</strong>（JT/T 808/1078 协议网关、时序与对象存储、视频处理）</td>
+<td>开源界空白，本项目核心壁垒</td>
+</tr>
+<tr>
+<td>质检</td>
+<td>结构化质量借鉴 <strong>Qualitis/Great Expectations</strong> 规则模型自研</td>
+<td>与 Lite 架构一致，避免额外组件</td>
+</tr>
+<tr>
+<td>二期治理增强</td>
+<td>评估 <strong>OpenMetadata</strong> 替换自研资产目录</td>
+<td>数据规模/团队扩大后，专业目录的血缘与连接器价值显现</td>
+</tr>
+</tbody>
+</table>
+<p><strong>总体结论</strong>：国产开源能帮我们省下"通用后台、调度、BI、数据治理菜单设计、标注"的重复劳动（预计可减少 30%～40% 非核心工作量），但项目的真正差异化能力——<strong>北斗终端接入、轨迹计算、视频 AI、隐私合规与保险数据产品</strong>——开源生态无法覆盖，必须作为自研主线。</p>
+  </main>
+</div>
+<script>
+// 移动端：点击目录链接后自动收起抽屉
+document.querySelectorAll('.toc a').forEach(function(a){
+  a.addEventListener('click',function(){document.querySelector('.toc').classList.remove('open');});
+});
+</script>
+</body>
+</html>

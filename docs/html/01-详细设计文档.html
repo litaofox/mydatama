@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>详细设计文档</title>
+<style>
+:root{
+  --primary:#1f5fbf; --primary-dark:#174a96; --bg:#f4f6fa; --card:#ffffff;
+  --text:#1f2733; --muted:#667085; --border:#e3e8f0; --code-bg:#1e2530;
+  --accent-bg:#eef4ff; --th-bg:#1f5fbf; --th-text:#fff;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.85;font-size:16px;}
+.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:var(--primary-dark);
+  color:#fff;display:flex;align-items:center;padding:0 20px;z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.topbar .home{color:#fff;text-decoration:none;font-size:14px;opacity:.85;margin-right:18px;white-space:nowrap;}
+.topbar .home:hover{opacity:1;}
+.topbar .title{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.layout{display:flex;max-width:1280px;margin:56px auto 0;}
+.toc{width:260px;flex-shrink:0;padding:24px 0 24px 20px;}
+.toc-inner{position:sticky;top:76px;max-height:calc(100vh - 100px);overflow-y:auto;
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 14px;}
+.toc-inner .toc-title{font-size:13px;font-weight:700;color:var(--muted);
+  letter-spacing:1px;margin:0 0 10px 4px;}
+.toc-inner ul{list-style:none;margin:0;padding:0;}
+.toc-inner ul ul{padding-left:14px;}
+.toc-inner li{margin:3px 0;}
+.toc-inner a{display:block;color:#44506a;text-decoration:none;font-size:13.5px;
+  line-height:1.5;padding:3px 8px;border-radius:6px;border-left:2px solid transparent;}
+.toc-inner a:hover{background:var(--accent-bg);color:var(--primary);}
+.content{flex:1;min-width:0;background:var(--card);margin:20px 24px 60px;padding:40px 52px;
+  border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 1px 4px rgba(16,42,90,.05);}
+h1{font-size:28px;color:var(--primary-dark);border-bottom:3px solid var(--primary);
+  padding-bottom:14px;margin-top:0;}
+h2{font-size:22px;color:var(--primary-dark);margin-top:42px;
+  border-left:5px solid var(--primary);padding-left:12px;}
+h3{font-size:18px;color:#28456e;margin-top:32px;}
+h4{font-size:16px;color:#344054;margin-top:24px;}
+p{margin:14px 0;}
+blockquote{margin:18px 0;padding:12px 18px;background:var(--accent-bg);
+  border-left:4px solid var(--primary);color:#3d4a5c;border-radius:0 8px 8px 0;}
+blockquote p{margin:6px 0;}
+a{color:var(--primary);}
+ul,ol{padding-left:26px;}
+li{margin:5px 0;}
+code{font-family:Consolas,"Courier New",monospace;font-size:13.5px;
+  background:#eef1f6;color:#b02a5e;padding:2px 6px;border-radius:4px;}
+pre{background:var(--code-bg);color:#d7e0ee;border-radius:10px;padding:18px 20px;
+  overflow-x:auto;line-height:1.55;font-size:13.5px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);}
+pre code{background:none;color:inherit;padding:0;font-size:inherit;}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:14.5px;
+  box-shadow:0 1px 3px rgba(16,42,90,.08);border-radius:8px;overflow:hidden;}
+th{background:var(--th-bg);color:var(--th-text);font-weight:600;padding:10px 14px;
+  text-align:left;border:1px solid var(--primary);white-space:nowrap;}
+td{padding:9px 14px;border:1px solid var(--border);vertical-align:top;}
+tbody tr:nth-child(even){background:#f7f9fd;}
+tbody tr:hover{background:var(--accent-bg);}
+hr{border:none;border-top:1px solid var(--border);margin:36px 0;}
+strong{color:#16345f;}
+h1 strong,h2 strong,h3 strong{color:inherit;}
+.toc-btn{display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
+  color:#fff;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer;margin-right:12px;}
+@media (max-width:900px){
+  .toc{display:block;position:fixed;top:56px;left:0;bottom:0;width:280px;z-index:90;
+    padding:16px;background:var(--bg);transform:translateX(-100%);transition:transform .25s;
+    overflow-y:auto;}
+  .toc.open{transform:translateX(0);box-shadow:4px 0 16px rgba(0,0,0,.15);}
+  .toc-btn{display:inline-block;}
+  .content{margin:12px 10px 40px;padding:24px 18px;}
+  .topbar .title{font-size:13px;}
+  table{font-size:13px;display:block;overflow-x:auto;}
+}
+@media print{
+  .topbar,.toc{display:none;}
+  .layout{margin:0;}
+  .content{border:none;box-shadow:none;margin:0;padding:0;}
+  pre,table,blockquote{break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="toc-btn" onclick="document.querySelector('.toc').classList.toggle('open')">☰ 目录</button>
+  <a class="home" href="index.html">← 文档首页</a>
+  <span class="title">详细设计文档</span>
+</div>
+<div class="layout">
+  <aside class="toc"><div class="toc-inner">
+    <p class="toc-title">目录导航</p>
+    
+<ul>
+<li><a href="#mvplite">企业级多模态数据中台 MVP（Lite 演示架构）— 详细设计文档</a><ul>
+<li><a href="#1">1. 文档目的与范围</a></li>
+<li><a href="#2-lite">2. 总体架构（Lite）</a><ul>
+<li><a href="#21">2.1 架构图</a></li>
+<li><a href="#22">2.2 与微服务版的取舍对照</a></li>
+<li><a href="#23-vs">2.3 模块清单（部署形态 vs 逻辑模块）</a></li>
+</ul>
+</li>
+<li><a href="#3">3. 核心业务流程</a><ul>
+<li><a href="#31">3.1 登录认证与鉴权流程</a></li>
+<li><a href="#32">3.2 数据上传与自动化处理流程（结构化 + 多模态统一链路）</a></li>
+<li><a href="#33">3.3 资产自动盘点与血缘</a></li>
+<li><a href="#34">3.4 数据集构建与质量报告</a></li>
+<li><a href="#35">3.5 大屏数据流（纯库查询，无额外组件）</a></li>
+<li><a href="#36">3.6 审计</a></li>
+</ul>
+</li>
+<li><a href="#4">4. 数据模型设计</a><ul>
+<li><a href="#41-iam-schema">4.1 iam schema</a></li>
+<li><a href="#42-proc-schema">4.2 proc schema</a></li>
+<li><a href="#43-gov-schema">4.3 gov schema</a></li>
+<li><a href="#44-ds-schema">4.4 ds schema</a></li>
+</ul>
+</li>
+<li><a href="#5-rest">5. 接口设计（REST，节选）</a></li>
+<li><a href="#6-portal-web">6. 前端设计（portal-web）</a></li>
+<li><a href="#7">7. 安全与合规设计（等保三级技术控制项）</a></li>
+<li><a href="#8">8. 非功能设计与演进路线</a><ul>
+<li><a href="#81-mvp">8.1 MVP 指标</a></li>
+<li><a href="#82-lite">8.2 从 Lite 到微服务的演进路线（本期只预留，不实施）</a></li>
+<li><a href="#83">8.3 其他扩展点（注册表式）</a></li>
+</ul>
+</li>
+<li><a href="#9">9. 工程结构</a></li>
+<li><a href="#10-mvp-definition-of-done">10. 验收标准（MVP Definition of Done）</a></li>
+</ul>
+</li>
+</ul>
+
+  </div></aside>
+  <main class="content">
+<h1 id="mvplite">企业级多模态数据中台 MVP（Lite 演示架构）— 详细设计文档</h1>
+<blockquote>
+<p>版本：v1.0（评审稿）　日期：2026-09-29
+架构定位：<strong>极简演示优先</strong>——全系统容器稳态内存 ≤ 2.5GB（整机含 OS/Docker ≤ 6GB，8GB 内存机器可流畅运行），外部中间件仅 1 个 PostgreSQL；模块边界保持清晰，可平滑演进到微服务版。
+配套文档：<a href="./02-部署文档与演示指南.md">02-部署文档与演示指南.md</a>、<a href="./03-系统部署开销评估报告.md">03-系统部署开销评估报告.md</a></p>
+</blockquote>
+<hr />
+<h2 id="1">1. 文档目的与范围</h2>
+<p>本文档描述数据中台 MVP 的技术架构、模块职责、核心业务流程、数据模型、接口设计、安全审计设计与扩展点，作为编码实施与评审的直接依据。</p>
+<p><strong>MVP 范围内（本期必交付）</strong>：
+- 用户登录认证（JWT）、RBAC 权限、ABAC 简单条件判定、操作审计；
+- <strong>结构化数据</strong>：CSV / JSON / Excel（xlsx/xls）上传、解析、标准化、按列自动脱敏；
+- <strong>多模态数据</strong>：文本、图像、视频的接收、存储、基础处理（清洗/标准化/脱敏/元数据提取/缩略图）；
+- 智能标注（Label Studio 容器集成，<strong>可选 profile，开启后整机仍 ≤ 8GB</strong>）；
+- 自动化处理流水线（进程内异步、五阶段可观测、失败可重试）；
+- 资产目录（自动盘点、检索、分类、密级、血缘、使用热力）；
+- 训练数据集构建、版本管理、质量报告（完整性/一致性/准确性 + 评分建议）；
+- <strong>自研可视化大屏</strong>（实时指标、趋势、交互，零外部 BI 依赖）；
+- Docker Compose 一键部署（仅依赖 PostgreSQL 一个外部组件）。</p>
+<p><strong>MVP 范围外（预留扩展，不在本期验收）</strong>：微服务拆分（Nacos/Kafka）、MinIO/对象存储、Elasticsearch、字段级血缘、大数据分布式抽样、DataEase 容器（8GB 预算外的独立增强项）、OIDC 单点、Kubernetes/生产高可用、AllData 全量治理栈。</p>
+<hr />
+<h2 id="2-lite">2. 总体架构（Lite）</h2>
+<h3 id="21">2.1 架构图</h3>
+<pre><code class="language-mermaid">flowchart TB
+    subgraph Client[&quot;接入层&quot;]
+        U[&quot;浏览器用户&quot;]
+        API[&quot;第三方业务系统&lt;br/&gt;API-Key&quot;]
+    end
+
+    subgraph Edge[&quot;门户/边缘&quot;]
+        NGINX[&quot;portal-nginx :8090&lt;br/&gt;Vue3 静态站 + 路由分发&lt;br/&gt;/api/processing/** → Python；其余 /api/** → Java&quot;]
+    end
+
+    subgraph App[&quot;应用层（仅 2 个应用容器）&quot;]
+        JAVA[&quot;platform-app（Spring Boot 3 单体, Xmx640m）&lt;br/&gt;模块: iam / governance / dataset / common&lt;br/&gt;JWT 签发 · RBAC+ABAC · 审计 · 资产目录 · 血缘&lt;br/&gt;热力 · 数据集 · 质量引擎 · 大屏聚合 · 开放API&quot;]
+        PY[&quot;processing-app（FastAPI 单容器, Xmx 不限制）&lt;br/&gt;API + 内置 worker 线程&lt;br/&gt;结构化(pandas/openpyxl) · 文本 · 图像(Pillow) · 视频(ffmpeg)&lt;br/&gt;PG 任务队列(SKIP LOCKED) · 磁盘卷存储&quot;]
+    end
+
+    subgraph Ext[&quot;可选外部能力（独立容器, Nginx 收口）&quot;]
+        LS[&quot;Label Studio&lt;br/&gt;(label profile, 自带 SQLite)&lt;br/&gt;文本/图像/视频标注&quot;]
+    end
+
+    PG[(&quot;PostgreSQL 16（唯一中间件）&lt;br/&gt;单库 mydatama 四 schema:&lt;br/&gt;iam / gov / ds / proc&lt;br/&gt;+ 任务队列 + 审计&quot;)]
+    VOL[[&quot;数据卷 mydatama-data&lt;br/&gt;raw/ processed/ thumb/（宿主机或 named volume）&quot;]]
+
+    U --&gt; NGINX
+    API --&gt; NGINX
+    NGINX --&gt;|/api/processing/**| PY
+    NGINX --&gt;|/api/** , /openapi/**| JAVA
+    NGINX -.代理.-&gt; LS
+    JAVA --&gt; PG
+    PY --&gt; PG
+    PY --&gt; VOL
+    PY -.REST + 服务令牌.-&gt; LS
+    PY -.处理完成回调(内部令牌).-&gt; JAVA
+</code></pre>
+<p><strong>全系统运行容器（core 档）只有 4 个</strong>：<code>postgres</code>、<code>platform-app</code>（Java）、<code>processing-app</code>（Python）、<code>portal-nginx</code>；label 档再加 1 个 <code>label-studio</code>。</p>
+<h3 id="22">2.2 与微服务版的取舍对照</h3>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>微服务版做法</th>
+<th>Lite 版做法（本期）</th>
+<th>为什么演示场景成立</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>服务发现/配置</td>
+<td>Nacos</td>
+<td>固定容器名 + 环境变量，Compose 内部 DNS</td>
+<td>4 个容器，地址不变</td>
+</tr>
+<tr>
+<td>异步任务</td>
+<td>Kafka</td>
+<td>PostgreSQL 队列表 <code>proc.job_queue</code> + <code>FOR UPDATE SKIP LOCKED</code> 轮询（1–2s）</td>
+<td>演示任务量小，PG 行锁足够，且天然持久化、重启不丢任务</td>
+</tr>
+<tr>
+<td>缓存/限流/登录锁定</td>
+<td>Redis</td>
+<td>Java 进程内 Caffeine 缓存 + 本地令牌桶限流器 + 数据库失败计数</td>
+<td>单实例无状态诉求弱</td>
+</tr>
+<tr>
+<td>文件存储</td>
+<td>MinIO</td>
+<td>宿主机挂载卷 <code>/data</code>（raw/processed/thumb 三目录），FastAPI 受控下载</td>
+<td>单机演示足够；代码走 <code>Storage</code> 接口，生产可换 S3/MinIO</td>
+</tr>
+<tr>
+<td>Java 服务</td>
+<td>gateway+iam+governance+dataset 四个 JVM</td>
+<td><strong>一个可执行 Jar</strong>，Maven 多模块（包级隔离，模块间只走接口）</td>
+<td>省约 1.5GB 内存与启动时间；模块边界保留</td>
+</tr>
+<tr>
+<td>认证</td>
+<td>网关统一 JWT</td>
+<td>Nginx 按路径分发；Java 签发 JWT，<strong>Python 用同一 HMAC 密钥本地验签</strong>（PyJWT）</td>
+<td>对称密钥仅容器内环境变量持有</td>
+</tr>
+<tr>
+<td>检索</td>
+<td>Elasticsearch</td>
+<td>PostgreSQL ILIKE + pg_trgm 索引</td>
+<td>MVP 数据量（万级资产）毫秒响应</td>
+</tr>
+<tr>
+<td>生命周期事件</td>
+<td>Kafka topic</td>
+<td>Python 处理完成后<strong>同步回调</strong> Java 内部接口 <code>/internal/assets/register</code>（失败指数退避重试 5 次）</td>
+<td>只有两个应用，同步回调最简单可观测</td>
+</tr>
+<tr>
+<td>审计</td>
+<td>Kafka 汇聚</td>
+<td>Java 审计过滤器直写 PG；Python 侧动作调 Java <code>/internal/audit</code></td>
+<td>同上</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-vs">2.3 模块清单（部署形态 vs 逻辑模块）</h3>
+<table>
+<thead>
+<tr>
+<th>逻辑模块</th>
+<th>所在部署单元</th>
+<th>主要职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>common</td>
+<td>platform-app</td>
+<td>统一响应/异常/JWT/RBAC 注解/ABAC 引擎/审计/MyBatis 基类</td>
+</tr>
+<tr>
+<td>iam</td>
+<td>platform-app</td>
+<td>用户、角色、权限、ABAC 策略、API Key、登录、审计落库与检索</td>
+</tr>
+<tr>
+<td>governance</td>
+<td>platform-app</td>
+<td>资产目录、元数据、标准、血缘、热力、质量规则、开放 API、<strong>大屏聚合接口</strong></td>
+</tr>
+<tr>
+<td>dataset</td>
+<td>platform-app</td>
+<td>数据集选取、版本快照、质检引擎、评分建议、版本对比</td>
+</tr>
+<tr>
+<td>processing-api</td>
+<td>processing-app</td>
+<td>上传、文件/任务/标注查询、重试、受控文件下载</td>
+</tr>
+<tr>
+<td>processing-worker</td>
+<td>processing-app（同容器后台线程）</td>
+<td>抢队列任务，执行五阶段流水线，回调资产登记，回拉标注</td>
+</tr>
+<tr>
+<td>portal-web</td>
+<td>portal-nginx</td>
+<td>Vue3 门户 + ECharts 大屏</td>
+</tr>
+<tr>
+<td>Label Studio</td>
+<td>独立容器（可选）</td>
+<td>标注 UI/存储，Nginx 代理 + 令牌注入，<strong>端口不对外</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3">3. 核心业务流程</h2>
+<h3 id="31">3.1 登录认证与鉴权流程</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant B as 浏览器
+    participant N as Nginx
+    participant J as platform-app(Java)
+    participant P as processing-app(Python)
+    B-&gt;&gt;N: POST /api/auth/login
+    N-&gt;&gt;J: 路由到 Java
+    J-&gt;&gt;J: BCrypt 校验, 加载角色/权限
+    J--&gt;&gt;B: accessToken(JWT/HS256,2h)+refreshToken(7d)
+    B-&gt;&gt;N: 业务请求 (Bearer JWT)
+    alt /api/processing/**
+        N-&gt;&gt;P: 带 JWT 转发
+        P-&gt;&gt;P: PyJWT 同密钥验签 + 角色粗鉴权
+        P-&gt;&gt;J: 细粒度场景调 /internal/authz(服务令牌)
+    else 其他 /api/**
+        N-&gt;&gt;J: 带 JWT 转发
+        J-&gt;&gt;J: JWT 过滤器 + RBAC(方法注解) + ABAC(条件引擎)
+    end
+    J--&gt;&gt;B: 200 / 403
+</code></pre>
+<h3 id="32">3.2 数据上传与自动化处理流程（结构化 + 多模态统一链路）</h3>
+<pre><code class="language-mermaid">flowchart LR
+    A[&quot;上传文件&lt;br/&gt;CSV/JSON/Excel/TXT/图像/视频&quot;] --&gt; B[&quot;processing-app&lt;br/&gt;存 /data/raw, 写 proc.data_files&quot;]
+    B --&gt; Q[&quot;插入 proc.job_queue(status=PENDING)&quot;]
+    Q --&gt; W[&quot;worker 线程&lt;br/&gt;SKIP LOCKED 抢占&quot;]
+    W --&gt; S1[&quot;①采集校验&lt;br/&gt;类型/编码/大小白名单&quot;]
+    S1 --&gt; S2[&quot;②清洗&lt;br/&gt;去BOM/空行/去重/坏行隔离&quot;]
+    S2 --&gt; S3[&quot;③标准化&lt;br/&gt;UTF-8/列名归一/格式统一/转码&quot;]
+    S3 --&gt; S4[&quot;④脱敏&lt;br/&gt;敏感列/正则掩码, EXIF/视频标签剥离&quot;]
+    S4 --&gt; S5[&quot;⑤标注登记&lt;br/&gt;建LS任务(可选)/缩略图/元数据&quot;]
+    S5 --&gt; E[&quot;成品写 /data/processed&quot;]
+    E --&gt; CB[&quot;回调 Java /internal/assets/register&lt;br/&gt;(资产入库+血缘边+使用统计)&quot;]
+    CB --&gt; OK[&quot;任务置 SUCCEEDED, 写指标&quot;]
+    CB -.失败.-&gt; RT[&quot;退避重试, 5次失败置 FAILED 并记录原因&quot;]
+</code></pre>
+<p>任务状态：<code>PENDING → RUNNING（五阶段逐步更新）→ SUCCEEDED / FAILED</code>，前端 3s 轮询；队列并发：worker 线程数默认 2（环境变量可调），同一时刻处理 2 个任务。</p>
+<p><strong>各类型处理动作明细（MVP）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>格式</th>
+<th>清洗/标准化</th>
+<th>脱敏动作</th>
+<th>产出指标</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>结构化</td>
+<td>csv、json、xlsx、xls</td>
+<td>pandas 解析；chardet 编码探测转 UTF-8；列名 trim/下划线归一；去全空行列；去重；日期/数值格式归一；坏行入隔离记录</td>
+<td><strong>列名+内容双识别敏感列</strong>（手机/身份证/银行卡/邮箱/姓名），支持掩码、sha256 哈希、置空三策略，逐列可配</td>
+<td>行数/列数、缺失率、重复率、格式一致率、敏感列数、错误行数</td>
+</tr>
+<tr>
+<td>文本</td>
+<td>txt、md、log</td>
+<td>编码归一、去 BOM/控制字符、空白规范化、去重行</td>
+<td>正则识别手机/身份证/银行卡/邮箱并掩码</td>
+<td>字符数、有效行率、敏感命中数</td>
+</tr>
+<tr>
+<td>图像</td>
+<td>jpg、png、webp</td>
+<td>Pillow 校验、转 RGB、归一为 jpg/png</td>
+<td>剥离全部 EXIF/GPS 元数据</td>
+<td>分辨率、格式、大小、是否含 EXIF</td>
+</tr>
+<tr>
+<td>视频</td>
+<td>mp4、mov、webm</td>
+<td>ffprobe 登记；ffmpeg 抽首帧缩略图；mp4 源执行 <code>-map_metadata -1</code> 重封装</td>
+<td>清除容器/流元数据标签</td>
+<td>时长、分辨率、码率、编码、缩略图</td>
+</tr>
+</tbody>
+</table>
+<h3 id="33">3.3 资产自动盘点与血缘</h3>
+<ul>
+<li>触发：processing 完成后回调 <code>/internal/assets/register</code>，消息体含文件信息、模态、域、密级、指标、上下游引用。</li>
+<li>结构化文件额外回调列信息（列名、类型、是否敏感、脱敏策略），写 <code>gov.metadata_columns</code>。</li>
+<li>Java 侧 upsert 资产、写血缘边（raw 文件 → processed 成品 → 标注任务）、累加 <code>gov.asset_usage_stats(域×日)</code>。</li>
+<li>血缘查询：上游溯源 + 下游影响分析（某资产被哪些数据集引用）；前端 ECharts graph 渲染。</li>
+<li>热力图：域×日 count，ECharts heatmap。</li>
+</ul>
+<h3 id="34">3.4 数据集构建与质量报告</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant U as 用户
+    participant J as platform-app
+    U-&gt;&gt;J: 创建数据集(场景, 筛选: 模态/域/标签/质量阈值)
+    U-&gt;&gt;J: 生成版本 v1
+    J-&gt;&gt;J: 按条件快照资产写 ds.dataset_items
+    J-&gt;&gt;J: 质量引擎: 完整性(缺失&lt;0.5%) + 一致性(目标100%) + 准确性(错误率&lt;0.1%)
+    J-&gt;&gt;J: 综合评分 = 完整性×0.4 + 一致性×0.3 + 准确性×0.3
+    J--&gt;&gt;U: 三维度达标判定 + 评分 + 文字优化建议
+    U-&gt;&gt;J: 数据变化后生成 v2 → 增/删项与指标差异对比
+</code></pre>
+<h3 id="35">3.5 大屏数据流（纯库查询，无额外组件）</h3>
+<ul>
+<li>前端 <code>/screen</code> 每 10s 轮询 4 个聚合接口（走 Java，单条 SQL 走索引 + 进程内缓存 5s）：</li>
+<li><code>/api/screen/overview</code>：资产总量、今日新增、处理任务总量/成功率、脱敏命中总数、质量平均分、数据集数；</li>
+<li><code>/api/screen/trend?days=7</code>：每日处理量/成功率折线；</li>
+<li><code>/api/screen/distribution</code>：按模态、按业务域分布；</li>
+<li><code>/api/screen/ops</code>：近 24h 操作审计流（来自 iam.audit_logs）。</li>
+<li>交互：时间范围切换、业务域筛选、点击图表项下钻资产列表。</li>
+</ul>
+<h3 id="36">3.6 审计</h3>
+<ul>
+<li>Java 侧 servlet 过滤器记录所有 <code>/api/**</code>（除白名单）请求：用户、IP、方法、路径、状态码、耗时；关键动作（登录、上传、权限变更、数据集发布、脱敏策略变更）打动作标签。</li>
+<li>Python 侧动作（上传、重试、人工标注保存）调 <code>/internal/audit</code> 上报；Label Studio 代理操作由 Nginx 无法记录——处理办法：标注结果回拉/保存动作经 Python 落审计（记录真实平台用户），LS 页面浏览在门户跳转时记一条"进入标注台"。</li>
+<li>审计表只追加；审计页支持多条件检索与 CSV 导出，保留期默认 180 天。</li>
+</ul>
+<hr />
+<h2 id="4">4. 数据模型设计</h2>
+<p>单个 PostgreSQL 实例、单库 <code>mydatama</code>、<strong>四个 schema 隔离</strong>（<code>iam / gov / ds / proc</code>），应用账号按 schema 授权；逻辑上仍等同四个私有库，未来拆库只需改连接配置。公共字段：<code>created_at/updated_at/create_by/update_by/deleted</code>。</p>
+<h3 id="41-iam-schema">4.1 iam schema</h3>
+<pre><code class="language-mermaid">erDiagram
+    users ||--o{ user_roles : has
+    roles ||--o{ user_roles : assigned
+    roles ||--o{ role_permissions : grants
+    permissions ||--o{ role_permissions : in
+    users ||--o{ api_keys : owns
+    users {
+        bigint id PK
+        string username UK
+        string password_hash
+        string real_name
+        string dept_code
+        int secret_level
+        bool enabled
+    }
+    roles { bigint id PK; string code UK; string name }
+    permissions { bigint id PK; string code; string resource; string action }
+    policies { bigint id PK; string name; string resource; string action; string effect; jsonb condition_tree; bool enabled }
+    api_keys { bigint id PK; bigint user_id; string key_prefix; string key_hash; string scopes; datetime expire_at }
+    audit_logs { bigint id PK; string username; string action; string resource; string method; string path; int status_code; string ip; bigint cost_ms; jsonb detail; timestamp created_at }
+</code></pre>
+<p>ABAC 条件树示例：</p>
+<pre><code class="language-json">{&quot;all&quot;:[{&quot;op&quot;:&quot;dept_eq&quot;,&quot;left&quot;:&quot;user.dept_code&quot;,&quot;right&quot;:&quot;asset.owner_dept&quot;},
+        {&quot;op&quot;:&quot;lte&quot;,&quot;left&quot;:&quot;asset.secret_level&quot;,&quot;right&quot;:&quot;user.secret_level&quot;}]}
+</code></pre>
+<h3 id="42-proc-schema">4.2 proc schema</h3>
+<pre><code class="language-mermaid">erDiagram
+    data_files ||--o{ job_queue : triggers
+    data_files ||--o{ annotations : has
+    data_files {
+        bigint id PK
+        string file_name
+        string modality &quot;STRUCTURED/TEXT/IMAGE/VIDEO&quot;
+        string format
+        string raw_path; string processed_path; string thumb_path
+        bigint size_bytes
+        jsonb meta
+        int secret_level
+        string biz_domain
+        string status
+    }
+    job_queue {
+        bigint id PK
+        bigint file_id FK
+        string stage
+        string status &quot;PENDING/RUNNING/SUCCEEDED/FAILED&quot;
+        int retry_count
+        timestamp locked_at; bigint locked_by
+        jsonb metrics
+        jsonb mask_columns
+        string error_msg
+        string ls_project_id; string ls_task_id
+    }
+    annotations { bigint id PK; bigint file_id FK; string source &quot;MANUAL/LABEL_STUDIO&quot;; jsonb content; string annotator }
+</code></pre>
+<p>队列抢占 SQL（核心）：</p>
+<pre><code class="language-sql">UPDATE proc.job_queue SET status='RUNNING', locked_at=now(), locked_by=$worker
+WHERE id = (SELECT id FROM proc.job_queue
+            WHERE status='PENDING' ORDER BY id
+            FOR UPDATE SKIP LOCKED LIMIT 1)
+RETURNING *;
+</code></pre>
+<h3 id="43-gov-schema">4.3 gov schema</h3>
+<pre><code class="language-mermaid">erDiagram
+    assets ||--o{ asset_tags : maps
+    assets ||--o{ lineage_edges : &quot;up/down&quot;
+    assets ||--o{ asset_usage_stats : stats
+    metadata_tables ||--o{ metadata_columns : has
+    assets {
+        bigint id PK
+        string name
+        string asset_type &quot;DB_TABLE/DATASET_FILE/FILE&quot;
+        string modality
+        string biz_domain
+        int secret_level
+        string owner_dept
+        string storage_ref
+        bigint source_file_id
+        numeric quality_score
+        string status
+        jsonb ext
+    }
+    metadata_tables { bigint id PK; string table_name; string comment }
+    metadata_columns { bigint id PK; bigint table_id FK; string col_name; string data_type; bool sensitive; string mask_strategy }
+    lineage_edges { bigint id PK; bigint from_asset_id; bigint to_asset_id; string rel_type }
+    data_standards { bigint id PK; string code; string name; string rule_expr }
+    quality_rules { bigint id PK; string target_ref; string check_type; string expr; bool enabled }
+    quality_task_results { bigint id PK; bigint rule_id; timestamp run_at; numeric pass_rate; jsonb detail }
+    asset_usage_stats { bigint id PK; bigint asset_id; string biz_domain; date stat_date; int cnt }
+</code></pre>
+<blockquote>
+<p>MVP 不做 JDBC 外部数据源采集（<code>metadata_tables</code> 仅承载上传结构化文件的表结构）；连接器为扩展点。</p>
+</blockquote>
+<h3 id="44-ds-schema">4.4 ds schema</h3>
+<pre><code class="language-mermaid">erDiagram
+    datasets ||--o{ dataset_versions : versions
+    dataset_versions ||--o{ dataset_items : contains
+    datasets { bigint id PK; string name; string scenario; jsonb filter_cond; string creator }
+    dataset_versions { bigint id PK; bigint dataset_id FK; int version_no; int item_count; jsonb quality_report; string change_note }
+    dataset_items { bigint id PK; bigint version_id FK; bigint asset_id; jsonb asset_snapshot }
+</code></pre>
+<hr />
+<h2 id="5-rest">5. 接口设计（REST，节选）</h2>
+<p>统一前缀 <code>/api</code>，响应体 <code>{code, message, data}</code>；开放接口 <code>/openapi/v1</code> 用 <code>X-Api-Key</code>。
+Nginx 路由规则：<code>/api/processing/**</code> → processing-app:8000；其余 <code>/api/**</code>、<code>/openapi/**</code> → platform-app:8080。</p>
+<table>
+<thead>
+<tr>
+<th>方法/路径</th>
+<th>归属</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST /api/auth/login · /refresh</td>
+<td>Java</td>
+<td>登录/刷新</td>
+</tr>
+<tr>
+<td>GET/POST/PUT /api/iam/users · /roles · /policies · /api-keys</td>
+<td>Java</td>
+<td>权限管理</td>
+</tr>
+<tr>
+<td>GET /api/audit/logs（/export）</td>
+<td>Java</td>
+<td>审计检索/导出</td>
+</tr>
+<tr>
+<td>POST /api/processing/files/upload (multipart)</td>
+<td>Python</td>
+<td>上传（file, bizDomain, secretLevel, maskPolicy）</td>
+</tr>
+<tr>
+<td>GET /api/processing/files · /jobs/{id}</td>
+<td>Python</td>
+<td>文件/任务状态与阶段指标</td>
+</tr>
+<tr>
+<td>GET /api/processing/files/{id}/content?type=raw|processed</td>
+<td>Python</td>
+<td>受控下载（JWT + 权限）</td>
+</tr>
+<tr>
+<td>POST /api/processing/jobs/{id}/retry</td>
+<td>Python</td>
+<td>失败重试（重新入队）</td>
+</tr>
+<tr>
+<td>GET/PUT /api/processing/annotations/{fileId}</td>
+<td>Python</td>
+<td>标注查询/人工保存</td>
+</tr>
+<tr>
+<td>/internal/assets/register · /internal/audit · /internal/authz</td>
+<td>Java</td>
+<td>内部接口（仅服务令牌，不对外）</td>
+</tr>
+<tr>
+<td>GET /api/governance/assets?keyword&amp;modality&amp;domain</td>
+<td>Java</td>
+<td>资产检索（ILIKE+pg_trgm）</td>
+</tr>
+<tr>
+<td>GET /api/governance/assets/{id} · /lineage/{id} · /heatmap</td>
+<td>Java</td>
+<td>详情/血缘影响/热力</td>
+</tr>
+<tr>
+<td>GET/POST /api/governance/standards · /quality-rules</td>
+<td>Java</td>
+<td>标准/质量规则</td>
+</tr>
+<tr>
+<td>/openapi/v1/assets · /openapi/v1/datasets</td>
+<td>Java</td>
+<td>第三方开放 API</td>
+</tr>
+<tr>
+<td>POST /api/datasets · POST /api/datasets/{id}/versions</td>
+<td>Java</td>
+<td>建集/生成版本</td>
+</tr>
+<tr>
+<td>GET /api/datasets/{id}/versions/{vid}/report · /compare</td>
+<td>Java</td>
+<td>质量报告/版本对比</td>
+</tr>
+<tr>
+<td>GET /api/screen/overview · /trend · /distribution · /ops</td>
+<td>Java</td>
+<td>大屏聚合</td>
+</tr>
+<tr>
+<td>/label-studio/**</td>
+<td>Nginx 代理</td>
+<td>Label Studio（可选 profile；注入令牌）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-portal-web">6. 前端设计（portal-web）</h2>
+<p>Vue 3.4 + Vite + TS + Element Plus + Pinia + Vue Router + ECharts 5；构建产物由 portal-nginx 托管。
+页面：登录、工作台、数据处理（上传/任务列表/阶段时间线/文件详情/在线预览脱敏结果）、智能标注（iframe，无 label profile 时隐藏菜单）、资产目录（列表/详情/血缘图/热力图/标准/质量规则）、数据集（构建/版本/报告/对比）、<strong>可视化大屏 <code>/screen</code>（1920×1080 rem 自适应，可全屏）</strong>、权限管理（用户/角色/ABAC/APIKey）、审计日志。</p>
+<hr />
+<h2 id="7">7. 安全与合规设计（等保三级技术控制项）</h2>
+<table>
+<thead>
+<tr>
+<th>控制项</th>
+<th>设计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>身份鉴别</td>
+<td>BCrypt 口令；JWT HS256 access/refresh；同密钥双端验签；登录失败 5 次锁 10 分钟（DB 计数）</td>
+</tr>
+<tr>
+<td>访问控制</td>
+<td>Java 方法级 RBAC 注解 + ABAC 条件引擎；Python JWT 角色粗鉴权 + 细粒度回调 Java；最小权限种子</td>
+</tr>
+<tr>
+<td>安全审计</td>
+<td>Java 全请求审计 + Python/LS 关键动作上报；只追加、检索导出、保留 180 天</td>
+</tr>
+<tr>
+<td>数据保密性</td>
+<td>演示 HTTP 仅绑 localhost；生产启用 HTTPS（Nginx 证书配置项已预留）；敏感列/文本脱敏；DB 中无明文密码；密钥全走环境变量</td>
+</tr>
+<tr>
+<td>数据完整性</td>
+<td>上传记录 SHA-256；处理前后指标留痕；数据集版本快照不可变</td>
+</tr>
+<tr>
+<td>入侵防范</td>
+<td>Nginx/Java 双层限流（本地令牌桶）；上传类型/大小白名单（≤200MB）；内部接口仅监听容器网络并要求 <code>X-Service-Token</code>；LS 端口不暴露</td>
+</tr>
+<tr>
+<td>剩余信息保护</td>
+<td>删除文件时 raw/processed/thumb 同步清理（软删 + 启动时清理任务，预留）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8">8. 非功能设计与演进路线</h2>
+<h3 id="81-mvp">8.1 MVP 指标</h3>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>目标</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>内存</td>
+<td>core 档容器稳态 <strong>≤ 2.5GB</strong>；+label 档 ≤ 3.5GB；整机占用 ≤ 6GB（<strong>8GB 机器流畅</strong>）</td>
+</tr>
+<tr>
+<td>镜像与启动</td>
+<td>镜像总量约 1.5–2GB；<code>up -d</code> 到可登录 <strong>≤ 3 分钟</strong>（含首次建表）</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>常规接口 P95 &lt; 300ms（无网络中间件跳数）；小文件任务 ≥ 20 个/分钟；轮询 3s、大屏 10s</td>
+</tr>
+<tr>
+<td>可靠性</td>
+<td>任务落 PG 队列，应用重启自动继续；失败可重试；回调失败自动退避</td>
+</tr>
+<tr>
+<td>可移植</td>
+<td>docker compose 一条命令；数据卷可整体拷贝迁移</td>
+</tr>
+</tbody>
+</table>
+<h3 id="82-lite">8.2 从 Lite 到微服务的演进路线（本期只预留，不实施）</h3>
+<pre><code class="language-mermaid">flowchart LR
+    L[&quot;Lite(本期)&lt;br/&gt;单体Java+单Python+PG+磁盘卷&quot;] --&gt; E1[&quot;阶段1: worker独立扩缩容&lt;br/&gt;多副本消费同一PG队列&quot;]
+    E1 --&gt; E2[&quot;阶段2: 文件存储换 MinIO/S3&lt;br/&gt;仅改 Storage 实现类&quot;]
+    E2 --&gt; E3[&quot;阶段3: Java 按模块拆 3 服务 + 网关&lt;br/&gt;引 Nacos, 内部接口平移为 REST&quot;]
+    E3 --&gt; E4[&quot;阶段4: 队列/事件换 Kafka&lt;br/&gt;审计与生命周期解耦&quot;]
+    E4 --&gt; E5[&quot;阶段5: ES检索/缓存/集群高可用/K8s&quot;]
+</code></pre>
+<p><strong>保证可演进的代码约束（本期实施时遵守）</strong>：
+1. Java 按 Maven 模块 <code>common / iam / governance / dataset</code> 分包，模块间只能调用对方定义的 service 接口，不直接访问对方 mapper/表；
+2. Python 存储层定义 <code>Storage</code> 接口（<code>save/read/presign/delete</code>），本期实现 <code>LocalDiskStorage</code>；
+3. 任务投递/消费走 <code>JobQueue</code> 接口，本期实现 <code>PostgresQueue</code>；
+4. 资产登记走 HTTP 内部接口而非跨 schema 直写 gov 表；
+5. 所有可变参数（线程数、轮询间隔、保留期、限流阈值）走环境变量。</p>
+<h3 id="83">8.3 其他扩展点（注册表式）</h3>
+<p>流水线阶段（可加 OCR/语音转写）、脱敏规则、质检规则（NOT_NULL/REGEX/RANGE/FORMAT…）、数据源连接器、检索实现（PG→ES）。</p>
+<hr />
+<h2 id="9">9. 工程结构</h2>
+<pre><code>mydatama/
+├── docker-compose.yml          # 仅 4 容器(core)；profiles: label
+├── .env.example
+├── infra/
+│   ├── postgres/init/          # 建库/四 schema/建表/索引(pg_trgm)/种子数据
+│   └── nginx/portal.conf       # 静态站 + /api 路径分流 + LS 代理
+├── backend-java/               # Maven 多模块, 单可执行 Jar
+│   ├── pom.xml
+│   ├── platform-common/
+│   ├── module-iam/
+│   ├── module-governance/
+│   ├── module-dataset/
+│   └── platform-boot/          # 启动模块(聚合装配, 唯一 main 类)
+├── processing-service/         # 单容器: api + worker 线程
+│   ├── Dockerfile              # 基于 python:3.11-slim + apt ffmpeg
+│   └── app/services/pipeline/{structured,text,image,video}.py
+├── integration/label-studio/   # LS 配置(令牌/禁公开注册), 数据卷挂 lsdata
+├── frontend/                   # Vue3 门户与大屏
+├── samples/                    # 演示样例
+└── scripts/smoke-test.sh
+</code></pre>
+<hr />
+<h2 id="10-mvp-definition-of-done">10. 验收标准（MVP Definition of Done）</h2>
+<ol>
+<li><code>docker compose up -d</code>（core）在 <strong>8GB 内存机器</strong>上 3 分钟内全部 healthy，<code>docker stats</code> 合计内存 ≤ 2.5GB；</li>
+<li>浏览器全程走通：登录 → 上传 CSV/TXT/图像/视频 → 五阶段处理与脱敏 → 资产自动入库与血缘 → 构建数据集出三维度质量报告 → 大屏指标实时刷新 → 审计可查全部动作；</li>
+<li>CSV 样例手机/身份证/银行卡列掩码正确，指标识别出全部敏感列；图像 EXIF 剥离；视频生成缩略图且元数据标签清除；</li>
+<li>viewer 越权返回 403；API-Key 调通开放 API；</li>
+<li><code>--profile label</code> 下可在门户内嵌 Label Studio 完成一次标注并回拉，整机内存仍 ≤ 8GB；</li>
+<li>处理过程中重启 processing-app，PENDING 任务不丢、重启后继续；</li>
+<li><code>scripts/smoke-test.sh</code> 全部 PASS。</li>
+</ol>
+  </main>
+</div>
+<script>
+// 移动端：点击目录链接后自动收起抽屉
+document.querySelectorAll('.toc a').forEach(function(a){
+  a.addEventListener('click',function(){document.querySelector('.toc').classList.remove('open');});
+});
+</script>
+</body>
+</html>

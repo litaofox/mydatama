@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>系统部署开销评估报告</title>
+<style>
+:root{
+  --primary:#1f5fbf; --primary-dark:#174a96; --bg:#f4f6fa; --card:#ffffff;
+  --text:#1f2733; --muted:#667085; --border:#e3e8f0; --code-bg:#1e2530;
+  --accent-bg:#eef4ff; --th-bg:#1f5fbf; --th-text:#fff;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.85;font-size:16px;}
+.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:var(--primary-dark);
+  color:#fff;display:flex;align-items:center;padding:0 20px;z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.topbar .home{color:#fff;text-decoration:none;font-size:14px;opacity:.85;margin-right:18px;white-space:nowrap;}
+.topbar .home:hover{opacity:1;}
+.topbar .title{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.layout{display:flex;max-width:1280px;margin:56px auto 0;}
+.toc{width:260px;flex-shrink:0;padding:24px 0 24px 20px;}
+.toc-inner{position:sticky;top:76px;max-height:calc(100vh - 100px);overflow-y:auto;
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 14px;}
+.toc-inner .toc-title{font-size:13px;font-weight:700;color:var(--muted);
+  letter-spacing:1px;margin:0 0 10px 4px;}
+.toc-inner ul{list-style:none;margin:0;padding:0;}
+.toc-inner ul ul{padding-left:14px;}
+.toc-inner li{margin:3px 0;}
+.toc-inner a{display:block;color:#44506a;text-decoration:none;font-size:13.5px;
+  line-height:1.5;padding:3px 8px;border-radius:6px;border-left:2px solid transparent;}
+.toc-inner a:hover{background:var(--accent-bg);color:var(--primary);}
+.content{flex:1;min-width:0;background:var(--card);margin:20px 24px 60px;padding:40px 52px;
+  border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 1px 4px rgba(16,42,90,.05);}
+h1{font-size:28px;color:var(--primary-dark);border-bottom:3px solid var(--primary);
+  padding-bottom:14px;margin-top:0;}
+h2{font-size:22px;color:var(--primary-dark);margin-top:42px;
+  border-left:5px solid var(--primary);padding-left:12px;}
+h3{font-size:18px;color:#28456e;margin-top:32px;}
+h4{font-size:16px;color:#344054;margin-top:24px;}
+p{margin:14px 0;}
+blockquote{margin:18px 0;padding:12px 18px;background:var(--accent-bg);
+  border-left:4px solid var(--primary);color:#3d4a5c;border-radius:0 8px 8px 0;}
+blockquote p{margin:6px 0;}
+a{color:var(--primary);}
+ul,ol{padding-left:26px;}
+li{margin:5px 0;}
+code{font-family:Consolas,"Courier New",monospace;font-size:13.5px;
+  background:#eef1f6;color:#b02a5e;padding:2px 6px;border-radius:4px;}
+pre{background:var(--code-bg);color:#d7e0ee;border-radius:10px;padding:18px 20px;
+  overflow-x:auto;line-height:1.55;font-size:13.5px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);}
+pre code{background:none;color:inherit;padding:0;font-size:inherit;}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:14.5px;
+  box-shadow:0 1px 3px rgba(16,42,90,.08);border-radius:8px;overflow:hidden;}
+th{background:var(--th-bg);color:var(--th-text);font-weight:600;padding:10px 14px;
+  text-align:left;border:1px solid var(--primary);white-space:nowrap;}
+td{padding:9px 14px;border:1px solid var(--border);vertical-align:top;}
+tbody tr:nth-child(even){background:#f7f9fd;}
+tbody tr:hover{background:var(--accent-bg);}
+hr{border:none;border-top:1px solid var(--border);margin:36px 0;}
+strong{color:#16345f;}
+h1 strong,h2 strong,h3 strong{color:inherit;}
+.toc-btn{display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
+  color:#fff;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer;margin-right:12px;}
+@media (max-width:900px){
+  .toc{display:block;position:fixed;top:56px;left:0;bottom:0;width:280px;z-index:90;
+    padding:16px;background:var(--bg);transform:translateX(-100%);transition:transform .25s;
+    overflow-y:auto;}
+  .toc.open{transform:translateX(0);box-shadow:4px 0 16px rgba(0,0,0,.15);}
+  .toc-btn{display:inline-block;}
+  .content{margin:12px 10px 40px;padding:24px 18px;}
+  .topbar .title{font-size:13px;}
+  table{font-size:13px;display:block;overflow-x:auto;}
+}
+@media print{
+  .topbar,.toc{display:none;}
+  .layout{margin:0;}
+  .content{border:none;box-shadow:none;margin:0;padding:0;}
+  pre,table,blockquote{break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="toc-btn" onclick="document.querySelector('.toc').classList.toggle('open')">☰ 目录</button>
+  <a class="home" href="index.html">← 文档首页</a>
+  <span class="title">系统部署开销评估报告</span>
+</div>
+<div class="layout">
+  <aside class="toc"><div class="toc-inner">
+    <p class="toc-title">目录导航</p>
+    
+<ul>
+<li><a href="#mvplite">企业级多模态数据中台 MVP（Lite 演示架构）— 系统部署开销评估报告</a><ul>
+<li><a href="#1">1. 场景划分</a></li>
+<li><a href="#2">2. 硬件配置需求</a><ul>
+<li><a href="#21-lite-rss">2.1 Lite 版逐容器内存（稳态 RSS 估算）</a></li>
+<li><a href="#22">2.2 镜像体积与磁盘</a></li>
+<li><a href="#23">2.3 各场景推荐配置</a></li>
+</ul>
+</li>
+<li><a href="#3">3. 软件清单与许可成本</a><ul>
+<li><a href="#31">3.1 本期实际使用组件</a></li>
+<li><a href="#32">3.2 许可成本结论</a></li>
+<li><a href="#33-s2">3.3 云试点价格参考（S2，若不买服务器而上云，中国大陆区域粗估）</a></li>
+</ul>
+</li>
+<li><a href="#4">4. 运维人力估算</a></li>
+<li><a href="#5-tco">5. 首年 TCO 汇总</a></li>
+<li><a href="#6-lite">6. Lite 架构的代价与风险（知情说明）</a></li>
+<li><a href="#7">7. 开销优化建议</a></li>
+</ul>
+</li>
+</ul>
+
+  </div></aside>
+  <main class="content">
+<h1 id="mvplite">企业级多模态数据中台 MVP（Lite 演示架构）— 系统部署开销评估报告</h1>
+<blockquote>
+<p>版本：v1.0（评审稿）　日期：2026-09-29
+估算口径：方案阶段估算，用于立项与资源准备；实际以 POC 实测与采购时点报价为准。
+架构说明：本版为<strong>演示优先的 Lite 架构</strong>——仅 4–5 个容器、唯一中间件 PostgreSQL，8GB 内存普通办公电脑即可全功能演示。
+配套：<a href="./01-详细设计文档.md">01-详细设计文档.md</a>、<a href="./02-部署文档与演示指南.md">02-部署文档与演示指南.md</a></p>
+</blockquote>
+<hr />
+<h2 id="1">1. 场景划分</h2>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>用途</th>
+<th>形态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S1 Lite 演示（本期交付）</strong></td>
+<td>售前演示、客户试用、开发自测</td>
+<td>普通办公电脑，4 容器 Compose，<strong>整机 ≤ 8GB</strong></td>
+</tr>
+<tr>
+<td><strong>S1-L</strong> Lite 演示 + 标注</td>
+<td>需 Label Studio 专业标注台</td>
+<td>5 容器，<strong>整机 ≤ 8GB</strong></td>
+</tr>
+<tr>
+<td>S2 部门试点（10–50 人）</td>
+<td>真实业务轻量生产</td>
+<td>一台 8C16G 服务器（同架构 + 定期备份 + HTTPS）</td>
+</tr>
+<tr>
+<td>S3 规模化生产（50–300 人，非本期）</td>
+<td>按演进路线拆分</td>
+<td>多节点 + 对象存储 + 微服务/K8s</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2">2. 硬件配置需求</h2>
+<h3 id="21-lite-rss">2.1 Lite 版逐容器内存（稳态 RSS 估算）</h3>
+<table>
+<thead>
+<tr>
+<th>容器</th>
+<th>镜像基础</th>
+<th>内存（稳态）</th>
+<th>CPU</th>
+<th>磁盘（不含用户文件）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>postgres:16</td>
+<td>官方</td>
+<td>300–500 MB</td>
+<td>0.2 核</td>
+<td>1–3 GB</td>
+</tr>
+<tr>
+<td>platform-app（Java 单体，Xmx640m）</td>
+<td>eclipse-temurin:17-jre</td>
+<td><strong>700–900 MB</strong></td>
+<td>0.4 核</td>
+<td>&lt;300 MB</td>
+</tr>
+<tr>
+<td>processing-app（FastAPI+pandas+Pillow+ffmpeg）</td>
+<td>python:3.11-slim</td>
+<td>350–600 MB（视频转码瞬时 +300MB）</td>
+<td>0.5 核（瞬时 1.5 核）</td>
+<td>&lt;500 MB</td>
+</tr>
+<tr>
+<td>portal-nginx</td>
+<td>nginx:alpine</td>
+<td>20–40 MB</td>
+<td>&lt;0.1 核</td>
+<td>&lt;100 MB</td>
+</tr>
+<tr>
+<td><strong>core 合计</strong></td>
+<td></td>
+<td><strong>约 1.4–2.1GB（上限按 2.5GB 设计）</strong></td>
+<td><strong>≈1.2 核</strong></td>
+<td><strong>约 2–4GB</strong></td>
+</tr>
+<tr>
+<td>label-studio（社区版，SQLite 库）</td>
+<td>官方</td>
+<td>600–1,000 MB</td>
+<td>0.3 核</td>
+<td>1–5 GB</td>
+</tr>
+<tr>
+<td><strong>core+label 合计</strong></td>
+<td></td>
+<td><strong>约 2.0–3.1GB（上限按 3.5GB 设计）</strong></td>
+<td>≈1.5 核</td>
+<td>3–9 GB</td>
+</tr>
+</tbody>
+</table>
+<p>加上 Docker Desktop/WSL2 与 Windows/macOS 自身开销（2–3GB），<strong>8GB 机器实测预期占用 5–6.5GB，留有 ≥1.5GB 余量，浏览器大屏与 IDE 也能同时开</strong>。</p>
+<h3 id="22">2.2 镜像体积与磁盘</h3>
+<table>
+<thead>
+<tr>
+<th>镜像</th>
+<th>压缩下载</th>
+<th>解压后</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>postgres:16</td>
+<td>~150 MB</td>
+<td>~430 MB</td>
+</tr>
+<tr>
+<td>eclipse-temurin:17-jre</td>
+<td>~90 MB</td>
+<td>~280 MB</td>
+</tr>
+<tr>
+<td>python:3.11-slim + ffmpeg 层</td>
+<td>~80 MB（ffmpeg 层 ~120MB）</td>
+<td>~500 MB</td>
+</tr>
+<tr>
+<td>nginx:alpine</td>
+<td>~20 MB</td>
+<td>~60 MB</td>
+</tr>
+<tr>
+<td>label-studio</td>
+<td>~350 MB</td>
+<td>~1GB</td>
+</tr>
+<tr>
+<td>自研镜像层（Jar/Py 依赖/前端dist）</td>
+<td>Jar ~80MB、Py 依赖 ~250MB、dist ~30MB</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>core 下载总量</strong></td>
+<td><strong>约 1–1.5GB</strong></td>
+<td>镜像磁盘约 2–3GB</td>
+</tr>
+</tbody>
+</table>
+<p>用户文件（raw+processed 双份 + 缩略图）按实际演示数据计；一次完整演示（含示例视频）&lt; 500MB。建议预留 <strong>20GB</strong> 磁盘。</p>
+<h3 id="23">2.3 各场景推荐配置</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>CPU</th>
+<th>内存</th>
+<th>磁盘</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1 / S1-L 演示</td>
+<td>4 核</td>
+<td><strong>8GB</strong></td>
+<td>20GB SSD</td>
+<td>普通办公笔记本/台式机即可（i5/锐龙 5 近年代）</td>
+</tr>
+<tr>
+<td>S2 试点生产</td>
+<td>8 核</td>
+<td>16GB</td>
+<td>100GB 系统盘 + 数据盘（或挂对象存储）</td>
+<td>Java 堆可调到 2GB、worker 线程 4；每日备份</td>
+</tr>
+<tr>
+<td>S3 高可用（路线）</td>
+<td>3 节点 × 16C32G</td>
+<td>—</td>
+<td>对象存储 + SSD</td>
+<td>需按演进路线拆服务后再部署，非本期架构直接放大</td>
+</tr>
+</tbody>
+</table>
+<p><strong>容量粗算（S2 试点参考）</strong>：日均 1 万结构化文件 × 500KB + 200 多模态文件（图 3MB / 视频 50MB）≈ 15–20GB/天（双份）；文件建议直接挂载大容量盘或改对象存储，数据库年增长仅 10–30GB。</p>
+<hr />
+<h2 id="3">3. 软件清单与许可成本</h2>
+<h3 id="31">3.1 本期实际使用组件</h3>
+<table>
+<thead>
+<tr>
+<th>软件</th>
+<th>版本</th>
+<th>许可证</th>
+<th>用途</th>
+<th>费用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PostgreSQL</td>
+<td>16</td>
+<td>PostgreSQL License（类 MIT/MIT 宽松）</td>
+<td>唯一中间件</td>
+<td>免费</td>
+</tr>
+<tr>
+<td>OpenJDK Temurin</td>
+<td>17</td>
+<td>GPLv2+CE</td>
+<td>Java 运行时</td>
+<td>免费</td>
+</tr>
+<tr>
+<td>Spring Boot 3.2</td>
+<td>—</td>
+<td>Apache-2.0</td>
+<td>应用框架</td>
+<td>免费</td>
+</tr>
+<tr>
+<td>MyBatis(-Plus)</td>
+<td>—</td>
+<td>Apache-2.0</td>
+<td>ORM</td>
+<td>免费</td>
+</tr>
+<tr>
+<td>Caffeine</td>
+<td>—</td>
+<td>Apache-2.0</td>
+<td>进程内缓存（替代 Redis）</td>
+<td>免费</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.11</td>
+<td>PSF</td>
+<td>运行时</td>
+<td>免费</td>
+</tr>
+<tr>
+<td>FastAPI / uvicorn</td>
+<td>现行</td>
+<td>MIT / BSD</td>
+<td>API</td>
+<td>免费</td>
+</tr>
+<tr>
+<td>pandas / openpyxl / chardet / Pillow / PyJWT</td>
+<td>现行</td>
+<td>BSD/MIT 类</td>
+<td>结构化与图像处理</td>
+<td>免费</td>
+</tr>
+<tr>
+<td><strong>ffmpeg</strong></td>
+<td>发行版源版本</td>
+<td>动态链接官方包为 <strong>GPL/LGPL</strong>（视编译选项）</td>
+<td>视频探测/缩略图/元数据清除</td>
+<td>免费；仅以独立进程被调用、不分发，商业使用无授权费；若未来分发含专有编码器的构建需法务确认</td>
+</tr>
+<tr>
+<td>Nginx</td>
+<td>OSS</td>
+<td>BSD-2</td>
+<td>门户/代理</td>
+<td>免费</td>
+</tr>
+<tr>
+<td>Vue / Element Plus / ECharts</td>
+<td>3.4 / 现行 / 5</td>
+<td>MIT / MIT / Apache-2.0</td>
+<td>前端与大屏</td>
+<td>免费</td>
+</tr>
+<tr>
+<td>Docker CE（Linux）</td>
+<td>—</td>
+<td>Apache-2.0</td>
+<td>服务器容器运行</td>
+<td>免费</td>
+</tr>
+<tr>
+<td><strong>Docker Desktop</strong></td>
+<td>现行</td>
+<td>商用订阅条款</td>
+<td>Windows/macOS 演示</td>
+<td>大企业（≥250 人或年收入≥1000 万美元）商用约 <strong>$10–24/用户/月</strong>；可用 Linux 机 Docker CE 或 Rancher Desktop 规避</td>
+</tr>
+<tr>
+<td>Label Studio 社区版</td>
+<td>现行</td>
+<td><strong>Apache-2.0</strong></td>
+<td>可选专业标注台</td>
+<td>免费（SQLite 库，零额外基础设施）；企业版 SSO/RBAC 按席位另购</td>
+</tr>
+</tbody>
+</table>
+<p><strong>未使用（相比微服务版直接省掉的许可与运维项）</strong>：Nacos（虽然免费但省内存）、Apache Kafka、Redis（亦规避 7.4 起 RSAL 许可变化）、MinIO（规避 AGPL）、Elasticsearch（规避 SSPL/Elastic License）、DataEase（规避 GPL 全家桶内存开销）、独立 MySQL 实例。</p>
+<h3 id="32">3.2 许可成本结论</h3>
+<ul>
+<li><strong>Lite MVP 软件许可成本：0 元。</strong></li>
+<li>唯一条件性费用：开发者电脑上的 Docker Desktop 订阅（达到条款门槛时），可零成本规避。</li>
+<li>Label Studio 为 Apache-2.0（比 DataEase 的 GPL 更宽松），本期作为唯一可选外部系统。</li>
+<li>未来生产演进若引入 MinIO(AGPL)/Kafka(无影响)/DataEase(GPL) 等，保持"独立进程、网络集成、不改源码、不分发"即可，对外商业化前做一次开源合规审查。</li>
+</ul>
+<h3 id="33-s2">3.3 云试点价格参考（S2，若不买服务器而上云，中国大陆区域粗估）</h3>
+<table>
+<thead>
+<tr>
+<th>资源</th>
+<th>规格</th>
+<th>月费粗估</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>云主机</td>
+<td>8C16G ×1</td>
+<td>¥1,200–2,500</td>
+</tr>
+<tr>
+<td>云数据库 PG（可选，也可主机自建）</td>
+<td>2C4G</td>
+<td>¥500–1,200</td>
+</tr>
+<tr>
+<td>对象存储（可选，文件多再用）</td>
+<td>1TB</td>
+<td>¥100–150</td>
+</tr>
+<tr>
+<td>带宽 5–10Mbps</td>
+<td></td>
+<td>¥200–1,000</td>
+</tr>
+<tr>
+<td><strong>合计</strong></td>
+<td></td>
+<td><strong>约 ¥2,000–5,000/月</strong>（Lite 架构组件少，比微服务版试点低 30%+）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4">4. 运维人力估算</h2>
+<table>
+<thead>
+<tr>
+<th>阶段/场景</th>
+<th>工作内容</th>
+<th>投入</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>初次部署 S1</td>
+<td>装 Docker、<code>up -d</code>、跑冒烟</td>
+<td><strong>0.3–0.5 人天</strong>（仅 4 容器、1 数据库，半天内完成；离线 +0.5 人天）</td>
+</tr>
+<tr>
+<td>日常维护 S1 演示期</td>
+<td>启停、清磁盘、恢复出厂、问题响应</td>
+<td><strong>约 0.05 FTE</strong>（每月 &lt; 1 人天）</td>
+</tr>
+<tr>
+<td>S2 试点搭建</td>
+<td>部署 + HTTPS + 备份 + 账号 + API 联调</td>
+<td>3–6 人天（比微服务版少约一半）</td>
+</tr>
+<tr>
+<td>S2 日常运维</td>
+<td>备份恢复演练、磁盘/日志巡检、升级、用户支持</td>
+<td><strong>0.2–0.4 FTE</strong></td>
+</tr>
+<tr>
+<td>S3 高可用</td>
+<td>微服务/K8s/集群中间件/7×24</td>
+<td>1–2 FTE（演进后）</td>
+</tr>
+<tr>
+<td>业务运营（兼岗）</td>
+<td>资产分类、脱敏与质检规则维护、培训</td>
+<td>0.3–0.5 人兼岗</td>
+</tr>
+</tbody>
+</table>
+<p><strong>年度人力成本粗算</strong>（国内企业 IT 综合成本 ¥25–40 万/年·FTE）：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>运维投入</th>
+<th>年度成本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1 演示</td>
+<td>0.05 FTE</td>
+<td>¥1.2–2 万（通常不新增编制，忽略不计）</td>
+</tr>
+<tr>
+<td>S2 试点</td>
+<td>0.2–0.4 FTE</td>
+<td>¥5–16 万</td>
+</tr>
+<tr>
+<td>S3 高可用</td>
+<td>1–2 FTE</td>
+<td>¥25–80 万（演进后）</td>
+</tr>
+</tbody>
+</table>
+<p>最小运维动作：每日看容器/磁盘；每周 <code>pg_dump</code> + 文件卷打包并抽检可恢复；每月补丁升级、审计留存检查（180 天）；升级前 <code>down</code>（不删卷）→ 换镜像 → 冒烟通过。</p>
+<hr />
+<h2 id="5-tco">5. 首年 TCO 汇总</h2>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>硬件/云</th>
+<th>软件许可</th>
+<th>运维人力</th>
+<th>首年 TCO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S1 Lite 演示</strong></td>
+<td>复用现有 8GB 办公电脑（0 新增）</td>
+<td><strong>0</strong></td>
+<td>计入现团队</td>
+<td><strong>≈ 0–2 万元（基本为零）</strong></td>
+</tr>
+<tr>
+<td>S2 自建试点</td>
+<td>8C16G 服务器约 ¥1.5–2.5 万（一次性）+ 大盘</td>
+<td>0</td>
+<td>0.2–0.4 FTE</td>
+<td><strong>≈ ¥7–19 万</strong></td>
+</tr>
+<tr>
+<td>S2 云试点</td>
+<td>¥2,000–5,000/月</td>
+<td>0</td>
+<td>0.2–0.3 FTE</td>
+<td><strong>≈ ¥8–18 万</strong></td>
+</tr>
+<tr>
+<td>S3 高可用（演进后，路线参考）</td>
+<td>¥15–40 万/年</td>
+<td>0（或按需买商业增强）</td>
+<td>1–2 FTE</td>
+<td>¥40–120 万</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-lite">6. Lite 架构的代价与风险（知情说明）</h2>
+<table>
+<thead>
+<tr>
+<th>取舍点</th>
+<th>演示期影响</th>
+<th>生产期的补偿手段（已在架构预留）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Java 单体、Python 单实例</td>
+<td>无；演示并发本来就低</td>
+<td>按模块拆 3 个 Java 服务 + 网关；worker 先独立、多副本消费 PG 队列</td>
+</tr>
+<tr>
+<td>PG 队列代替 Kafka</td>
+<td>吞吐量上限约每秒数十任务，且轮询有 1–2s 延迟</td>
+<td>量级上来后换 Kafka（JobQueue 接口已抽象）</td>
+</tr>
+<tr>
+<td>磁盘卷代替对象存储</td>
+<td>不能多机共享文件、无原生多副本</td>
+<td>换 MinIO/S3/OSS（Storage 接口已抽象），配置项切换</td>
+</tr>
+<tr>
+<td>进程内缓存代替 Redis</td>
+<td>多实例后登录态/限流不共享</td>
+<td>拆服务时引入 Redis</td>
+</tr>
+<tr>
+<td>Label Studio 用 SQLite</td>
+<td>单用户演示无影响；多人并发写性能弱</td>
+<td>高并发标注时给 LS 挂 PostgreSQL（compose 改一行配置）</td>
+</tr>
+<tr>
+<td>无 Nacos 配置中心</td>
+<td>4 容器固定地址无影响</td>
+<td>拆服务时引入</td>
+</tr>
+<tr>
+<td>单 PG 节点</td>
+<td>演示数据丢失可 <code>down -v</code> 重来</td>
+<td>试点期每日逻辑备份；生产期云托管高可用或主从</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论</strong>：Lite 版牺牲的是"高并发/高可用上限"，保住的是"演示完整度 + 8GB 可跑 + 零许可费 + 极低运维"；且每一项取舍都在代码结构上预留了无重构演进路径。</p>
+<hr />
+<h2 id="7">7. 开销优化建议</h2>
+<ol>
+<li>演示一律 core 档（≤2.5GB），只在现场需要专业标注演示时提前 <code>--profile label</code>。</li>
+<li>不需要现场跑 Label Studio 时，用门户内置手工标注入口演示闭环，内存最省。</li>
+<li>8GB 机器若同时开 IDE/很多浏览器标签：<code>JAVA_XMX=512m</code>、<code>WORKER_THREADS=1</code>，容器内存可压到 ≈1.8GB。</li>
+<li>视频样例控制在 20MB 内，转码瞬时内存几乎无感。</li>
+<li>试点生产文件直接走大容量盘或云 OSS，避免为存储扩容整机规格。</li>
+</ol>
+  </main>
+</div>
+<script>
+// 移动端：点击目录链接后自动收起抽屉
+document.querySelectorAll('.toc a').forEach(function(a){
+  a.addEventListener('click',function(){document.querySelector('.toc').classList.remove('open');});
+});
+</script>
+</body>
+</html>
