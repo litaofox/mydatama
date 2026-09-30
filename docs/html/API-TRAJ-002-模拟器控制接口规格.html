@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>API-TRAJ-002-模拟器控制接口规格</title>
+<style>
+:root{
+  --primary:#1f5fbf; --primary-dark:#174a96; --bg:#f4f6fa; --card:#ffffff;
+  --text:#1f2733; --muted:#667085; --border:#e3e8f0; --code-bg:#1e2530;
+  --accent-bg:#eef4ff; --th-bg:#1f5fbf; --th-text:#fff;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.85;font-size:16px;}
+.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:var(--primary-dark);
+  color:#fff;display:flex;align-items:center;padding:0 20px;z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.topbar .home{color:#fff;text-decoration:none;font-size:14px;opacity:.85;margin-right:18px;white-space:nowrap;}
+.topbar .home:hover{opacity:1;}
+.topbar .title{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.layout{display:flex;max-width:1280px;margin:56px auto 0;}
+.toc{width:260px;flex-shrink:0;padding:24px 0 24px 20px;}
+.toc-inner{position:sticky;top:76px;max-height:calc(100vh - 100px);overflow-y:auto;
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 14px;}
+.toc-inner .toc-title{font-size:13px;font-weight:700;color:var(--muted);
+  letter-spacing:1px;margin:0 0 10px 4px;}
+.toc-inner ul{list-style:none;margin:0;padding:0;}
+.toc-inner ul ul{padding-left:14px;}
+.toc-inner li{margin:3px 0;}
+.toc-inner a{display:block;color:#44506a;text-decoration:none;font-size:13.5px;
+  line-height:1.5;padding:3px 8px;border-radius:6px;border-left:2px solid transparent;}
+.toc-inner a:hover{background:var(--accent-bg);color:var(--primary);}
+.content{flex:1;min-width:0;background:var(--card);margin:20px 24px 60px;padding:40px 52px;
+  border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 1px 4px rgba(16,42,90,.05);}
+h1{font-size:28px;color:var(--primary-dark);border-bottom:3px solid var(--primary);
+  padding-bottom:14px;margin-top:0;}
+h2{font-size:22px;color:var(--primary-dark);margin-top:42px;
+  border-left:5px solid var(--primary);padding-left:12px;}
+h3{font-size:18px;color:#28456e;margin-top:32px;}
+h4{font-size:16px;color:#344054;margin-top:24px;}
+p{margin:14px 0;}
+blockquote{margin:18px 0;padding:12px 18px;background:var(--accent-bg);
+  border-left:4px solid var(--primary);color:#3d4a5c;border-radius:0 8px 8px 0;}
+blockquote p{margin:6px 0;}
+a{color:var(--primary);}
+ul,ol{padding-left:26px;}
+li{margin:5px 0;}
+code{font-family:Consolas,"Courier New",monospace;font-size:13.5px;
+  background:#eef1f6;color:#b02a5e;padding:2px 6px;border-radius:4px;}
+pre{background:var(--code-bg);color:#d7e0ee;border-radius:10px;padding:18px 20px;
+  overflow-x:auto;line-height:1.55;font-size:13.5px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);}
+pre code{background:none;color:inherit;padding:0;font-size:inherit;}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:14.5px;
+  box-shadow:0 1px 3px rgba(16,42,90,.08);border-radius:8px;overflow:hidden;}
+th{background:var(--th-bg);color:var(--th-text);font-weight:600;padding:10px 14px;
+  text-align:left;border:1px solid var(--primary);white-space:nowrap;}
+td{padding:9px 14px;border:1px solid var(--border);vertical-align:top;}
+tbody tr:nth-child(even){background:#f7f9fd;}
+tbody tr:hover{background:var(--accent-bg);}
+hr{border:none;border-top:1px solid var(--border);margin:36px 0;}
+strong{color:#16345f;}
+h1 strong,h2 strong,h3 strong{color:inherit;}
+.toc-btn{display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
+  color:#fff;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer;margin-right:12px;}
+@media (max-width:900px){
+  .toc{display:block;position:fixed;top:56px;left:0;bottom:0;width:280px;z-index:90;
+    padding:16px;background:var(--bg);transform:translateX(-100%);transition:transform .25s;
+    overflow-y:auto;}
+  .toc.open{transform:translateX(0);box-shadow:4px 0 16px rgba(0,0,0,.15);}
+  .toc-btn{display:inline-block;}
+  .content{margin:12px 10px 40px;padding:24px 18px;}
+  .topbar .title{font-size:13px;}
+  table{font-size:13px;display:block;overflow-x:auto;}
+}
+@media print{
+  .topbar,.toc{display:none;}
+  .layout{margin:0;}
+  .content{border:none;box-shadow:none;margin:0;padding:0;}
+  pre,table,blockquote{break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="toc-btn" onclick="document.querySelector('.toc').classList.toggle('open')">☰ 目录</button>
+  <a class="home" href="index.html">← 文档首页</a>
+  <span class="title">API-TRAJ-002-模拟器控制接口规格</span>
+</div>
+<div class="layout">
+  <aside class="toc"><div class="toc-inner">
+    <p class="toc-title">目录导航</p>
+    
+<ul>
+<li><a href="#api-traj-002">API-TRAJ-002 模拟器控制接口规格</a><ul>
+<li><a href="#1">1. 概述</a><ul>
+<li><a href="#11">1.1 认证方式</a></li>
+<li><a href="#12">1.2 通用请求头</a></li>
+<li><a href="#13">1.3 通用响应体格式</a></li>
+</ul>
+</li>
+<li><a href="#2">2. 接口清单</a></li>
+<li><a href="#3">3. 接口详情</a><ul>
+<li><a href="#31">3.1 单点接入</a><ul>
+<li><a href="#_1">请求</a></li>
+<li><a href="#_2">响应</a></li>
+<li><a href="#_3">示例</a></li>
+<li><a href="#_4">变更记录</a></li>
+</ul>
+</li>
+<li><a href="#32">3.2 批量接入</a><ul>
+<li><a href="#_5">请求</a></li>
+<li><a href="#_6">响应</a></li>
+<li><a href="#_7">示例</a></li>
+<li><a href="#_8">变更记录</a></li>
+</ul>
+</li>
+<li><a href="#33">3.3 启动模拟器</a><ul>
+<li><a href="#_9">请求</a></li>
+<li><a href="#_10">响应</a></li>
+<li><a href="#_11">示例</a></li>
+<li><a href="#_12">变更记录</a></li>
+</ul>
+</li>
+<li><a href="#34">3.4 停止模拟器</a><ul>
+<li><a href="#_13">请求</a></li>
+<li><a href="#_14">响应</a></li>
+<li><a href="#_15">示例</a></li>
+<li><a href="#_16">变更记录</a></li>
+</ul>
+</li>
+<li><a href="#35">3.5 查询模拟器状态</a><ul>
+<li><a href="#_17">请求</a></li>
+<li><a href="#_18">响应</a></li>
+<li><a href="#_19">示例</a></li>
+<li><a href="#_20">变更记录</a></li>
+</ul>
+</li>
+<li><a href="#36">3.6 触发批量导入</a><ul>
+<li><a href="#_21">请求</a></li>
+<li><a href="#_22">响应</a></li>
+<li><a href="#_23">示例</a></li>
+<li><a href="#_24">变更记录</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#4">4. 错误码</a></li>
+<li><a href="#5">5. 修订记录</a></li>
+</ul>
+</li>
+</ul>
+
+  </div></aside>
+  <main class="content">
+<h1 id="api-traj-002">API-TRAJ-002 模拟器控制接口规格</h1>
+<blockquote>
+<p>版本：v1.0 ｜ 日期：2026-09-30
+所属模块：TRAJ
+基础路径：/api/traj/simulator（外部控制）、/api/traj/ingest（数据接入）</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 概述</h2>
+<h3 id="11">1.1 认证方式</h3>
+<ul>
+<li><strong>模拟器控制接口</strong>（/simulator/*）：需 JWT Bearer Token + <code>traj:admin</code> 权限</li>
+<li><strong>数据接入接口</strong>（/ingest/*）：需 <code>X-API-Key</code> 头（模拟器专用 API Key，不依赖 JWT）</li>
+</ul>
+<h3 id="12">1.2 通用请求头</h3>
+<table>
+<thead>
+<tr>
+<th>头名</th>
+<th>必填</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Authorization</td>
+<td>控制接口必填</td>
+<td><code>Bearer &lt;JWT&gt;</code></td>
+</tr>
+<tr>
+<td>X-API-Key</td>
+<td>接入接口必填</td>
+<td>模拟器 API Key（配置项 <code>traj.simulator.api-key</code>）</td>
+</tr>
+<tr>
+<td>Content-Type</td>
+<td>POST 必填</td>
+<td><code>application/json</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="13">1.3 通用响应体格式</h3>
+<pre><code class="language-json">{
+  &quot;code&quot;: 0,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;data&quot;: { ... }
+}
+</code></pre>
+<hr />
+<h2 id="2">2. 接口清单</h2>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>方法</th>
+<th>路径</th>
+<th>说明</th>
+<th>权限</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>POST</td>
+<td>/api/traj/ingest</td>
+<td>单点接入（实时推送）</td>
+<td>X-API-Key</td>
+</tr>
+<tr>
+<td>2</td>
+<td>POST</td>
+<td>/api/traj/ingest/batch</td>
+<td>批量接入（批量导入）</td>
+<td>X-API-Key</td>
+</tr>
+<tr>
+<td>3</td>
+<td>POST</td>
+<td>/api/traj/simulator/start</td>
+<td>启动模拟器</td>
+<td>traj:admin</td>
+</tr>
+<tr>
+<td>4</td>
+<td>POST</td>
+<td>/api/traj/simulator/stop</td>
+<td>停止模拟器</td>
+<td>traj:admin</td>
+</tr>
+<tr>
+<td>5</td>
+<td>GET</td>
+<td>/api/traj/simulator/status</td>
+<td>查询模拟器状态</td>
+<td>traj:view</td>
+</tr>
+<tr>
+<td>6</td>
+<td>POST</td>
+<td>/api/traj/simulator/batch-import</td>
+<td>触发批量导入</td>
+<td>traj:admin</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3">3. 接口详情</h2>
+<h3 id="31">3.1 单点接入</h3>
+<ul>
+<li><strong>方法</strong>：POST</li>
+<li><strong>路径</strong>：/api/traj/ingest</li>
+<li><strong>权限</strong>：X-API-Key 校验</li>
+<li><strong>描述</strong>：接收模拟器推送的单个轨迹点，校验并写入数据库</li>
+</ul>
+<h4 id="_1">请求</h4>
+<ul>
+<li><strong>请求头</strong>：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>头名</th>
+<th>必填</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X-API-Key</td>
+<td>是</td>
+<td>模拟器 API Key</td>
+</tr>
+<tr>
+<td>Content-Type</td>
+<td>是</td>
+<td>application/json</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>请求体</strong>：</li>
+</ul>
+<pre><code class="language-json">{
+  &quot;identityCode&quot;: &quot;TERM_001&quot;,
+  &quot;plateNo&quot;: &quot;京A12345&quot;,
+  &quot;gpsTime&quot;: &quot;2026-09-30T08:00:01&quot;,
+  &quot;lng&quot;: 116.407526,
+  &quot;lat&quot;: 39.904030,
+  &quot;speed&quot;: 42,
+  &quot;direction&quot;: 90,
+  &quot;altitude&quot;: 50,
+  &quot;alarmFlag&quot;: 0,
+  &quot;mileage&quot;: 12.35
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>必填</th>
+<th>校验规则</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>identityCode</td>
+<td>string</td>
+<td>是</td>
+<td>非空，需在 traj_terminal 登记</td>
+<td>设备号</td>
+</tr>
+<tr>
+<td>plateNo</td>
+<td>string</td>
+<td>否</td>
+<td>—</td>
+<td>车牌号</td>
+</tr>
+<tr>
+<td>gpsTime</td>
+<td>string</td>
+<td>是</td>
+<td>ISO 8601，≤ now()</td>
+<td>GPS时间</td>
+</tr>
+<tr>
+<td>lng</td>
+<td>double</td>
+<td>是</td>
+<td>73.0 ~ 136.0</td>
+<td>经度</td>
+</tr>
+<tr>
+<td>lat</td>
+<td>double</td>
+<td>是</td>
+<td>3.0 ~ 54.0</td>
+<td>纬度</td>
+</tr>
+<tr>
+<td>speed</td>
+<td>integer</td>
+<td>否</td>
+<td>≥ 0</td>
+<td>速度 km/h</td>
+</tr>
+<tr>
+<td>direction</td>
+<td>integer</td>
+<td>否</td>
+<td>0 ~ 359</td>
+<td>方向角</td>
+</tr>
+<tr>
+<td>altitude</td>
+<td>integer</td>
+<td>否</td>
+<td>—</td>
+<td>海拔 米</td>
+</tr>
+<tr>
+<td>alarmFlag</td>
+<td>integer</td>
+<td>否</td>
+<td>0 或 1，默认 0</td>
+<td>报警标志</td>
+</tr>
+<tr>
+<td>mileage</td>
+<td>double</td>
+<td>否</td>
+<td>≥ 0</td>
+<td>累计里程 km</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_2">响应</h4>
+<ul>
+<li><strong>成功</strong>（200）：</li>
+</ul>
+<pre><code class="language-json">{
+  &quot;code&quot;: 0,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;data&quot;: {
+    &quot;id&quot;: 144001,
+    &quot;receiveTime&quot;: &quot;2026-09-30T08:00:01&quot;
+  }
+}
+</code></pre>
+<ul>
+<li><strong>错误响应</strong>：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>HTTP 状态码</th>
+<th>code</th>
+<th>message</th>
+<th>场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td>TRAJ_001</td>
+<td>设备号不存在</td>
+<td>identityCode 未登记</td>
+</tr>
+<tr>
+<td>400</td>
+<td>TRAJ_002</td>
+<td>经纬度超出中国范围</td>
+<td>lng/lat 越界</td>
+</tr>
+<tr>
+<td>400</td>
+<td>TRAJ_003</td>
+<td>GPS时间超前于当前时间</td>
+<td>gpsTime &gt; now()</td>
+</tr>
+<tr>
+<td>401</td>
+<td>—</td>
+<td>API Key 无效</td>
+<td>X-API-Key 缺失或错误</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_3">示例</h4>
+<pre><code class="language-bash">curl -X POST &quot;http://localhost:8080/api/traj/ingest&quot; \
+  -H &quot;X-API-Key: sim-key-xxxxxx&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{
+    &quot;identityCode&quot;: &quot;TERM_001&quot;,
+    &quot;plateNo&quot;: &quot;京A12345&quot;,
+    &quot;gpsTime&quot;: &quot;2026-09-30T08:00:01&quot;,
+    &quot;lng&quot;: 116.407526,
+    &quot;lat&quot;: 39.904030,
+    &quot;speed&quot;: 42,
+    &quot;direction&quot;: 90,
+    &quot;altitude&quot;: 50,
+    &quot;alarmFlag&quot;: 0,
+    &quot;mileage&quot;: 12.35
+  }'
+</code></pre>
+<h4 id="_4">变更记录</h4>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>变更内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>初版</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="32">3.2 批量接入</h3>
+<ul>
+<li><strong>方法</strong>：POST</li>
+<li><strong>路径</strong>：/api/traj/ingest/batch</li>
+<li><strong>权限</strong>：X-API-Key 校验</li>
+<li><strong>描述</strong>：接收模拟器批量推送的轨迹点列表，每批最多 500 条</li>
+</ul>
+<h4 id="_5">请求</h4>
+<ul>
+<li><strong>请求体</strong>：</li>
+</ul>
+<pre><code class="language-json">{
+  &quot;points&quot;: [
+    {
+      &quot;identityCode&quot;: &quot;TERM_001&quot;,
+      &quot;plateNo&quot;: &quot;京A12345&quot;,
+      &quot;gpsTime&quot;: &quot;2026-09-30T08:00:00&quot;,
+      &quot;lng&quot;: 116.407526,
+      &quot;lat&quot;: 39.904030,
+      &quot;speed&quot;: 0,
+      &quot;direction&quot;: 90,
+      &quot;altitude&quot;: 50,
+      &quot;alarmFlag&quot;: 0,
+      &quot;mileage&quot;: 12.34
+    },
+    {
+      &quot;identityCode&quot;: &quot;TERM_001&quot;,
+      &quot;plateNo&quot;: &quot;京A12345&quot;,
+      &quot;gpsTime&quot;: &quot;2026-09-30T08:00:01&quot;,
+      &quot;lng&quot;: 116.407626,
+      &quot;lat&quot;: 39.904030,
+      &quot;speed&quot;: 42,
+      &quot;direction&quot;: 90,
+      &quot;altitude&quot;: 50,
+      &quot;alarmFlag&quot;: 0,
+      &quot;mileage&quot;: 12.35
+    }
+  ]
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>必填</th>
+<th>校验规则</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>points</td>
+<td>array</td>
+<td>是</td>
+<td>1 ~ 500 条</td>
+<td>轨迹点列表</td>
+</tr>
+<tr>
+<td>points[].*</td>
+<td>—</td>
+<td>—</td>
+<td>同 3.1 单点字段</td>
+<td>字段定义同单点接入</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_6">响应</h4>
+<ul>
+<li><strong>成功</strong>（200）：</li>
+</ul>
+<pre><code class="language-json">{
+  &quot;code&quot;: 0,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;data&quot;: {
+    &quot;count&quot;: 2,
+    &quot;failed&quot;: 0,
+    &quot;errors&quot;: []
+  }
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>count</td>
+<td>integer</td>
+<td>成功写入数量</td>
+</tr>
+<tr>
+<td>failed</td>
+<td>integer</td>
+<td>失败数量</td>
+</tr>
+<tr>
+<td>errors</td>
+<td>array</td>
+<td>失败详情列表（空表示全部成功）</td>
+</tr>
+<tr>
+<td>errors[].index</td>
+<td>integer</td>
+<td>失败点在数组中的索引</td>
+</tr>
+<tr>
+<td>errors[].reason</td>
+<td>string</td>
+<td>失败原因</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>错误响应</strong>：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>HTTP 状态码</th>
+<th>code</th>
+<th>message</th>
+<th>场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td>—</td>
+<td>批量数据不能超过500条</td>
+<td>points.length &gt; 500</td>
+</tr>
+<tr>
+<td>401</td>
+<td>—</td>
+<td>API Key 无效</td>
+<td>X-API-Key 错误</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_7">示例</h4>
+<pre><code class="language-bash">curl -X POST &quot;http://localhost:8080/api/traj/ingest/batch&quot; \
+  -H &quot;X-API-Key: sim-key-xxxxxx&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{&quot;points&quot;:[{&quot;identityCode&quot;:&quot;TERM_001&quot;,&quot;gpsTime&quot;:&quot;2026-09-30T08:00:00&quot;,&quot;lng&quot;:116.407526,&quot;lat&quot;:39.904030,&quot;speed&quot;:0}]}'
+</code></pre>
+<h4 id="_8">变更记录</h4>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>变更内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>初版</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="33">3.3 启动模拟器</h3>
+<ul>
+<li><strong>方法</strong>：POST</li>
+<li><strong>路径</strong>：/api/traj/simulator/start</li>
+<li><strong>权限</strong>：traj:admin</li>
+<li><strong>描述</strong>：启动 Python 模拟器，按参数生成轨迹数据并推送</li>
+</ul>
+<h4 id="_9">请求</h4>
+<ul>
+<li><strong>请求体</strong>：</li>
+</ul>
+<pre><code class="language-json">{
+  &quot;vehicles&quot;: 5,
+  &quot;durationHours&quot;: 8,
+  &quot;frequencyHz&quot;: 1.0,
+  &quot;avgSpeedKmh&quot;: 40,
+  &quot;mode&quot;: &quot;realtime&quot;
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>必填</th>
+<th>默认</th>
+<th>校验规则</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>vehicles</td>
+<td>integer</td>
+<td>否</td>
+<td>5</td>
+<td>1 ~ 20</td>
+<td>模拟车辆数</td>
+</tr>
+<tr>
+<td>durationHours</td>
+<td>integer</td>
+<td>否</td>
+<td>8</td>
+<td>1 ~ 24</td>
+<td>模拟时长（小时）</td>
+</tr>
+<tr>
+<td>frequencyHz</td>
+<td>double</td>
+<td>否</td>
+<td>1.0</td>
+<td>0.5 ~ 5.0</td>
+<td>采样频率 Hz</td>
+</tr>
+<tr>
+<td>avgSpeedKmh</td>
+<td>double</td>
+<td>否</td>
+<td>40.0</td>
+<td>20 ~ 80</td>
+<td>平均速度 km/h</td>
+</tr>
+<tr>
+<td>mode</td>
+<td>string</td>
+<td>否</td>
+<td>realtime</td>
+<td>realtime / batch</td>
+<td>推送模式</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_10">响应</h4>
+<ul>
+<li><strong>成功</strong>（200）：</li>
+</ul>
+<pre><code class="language-json">{
+  &quot;code&quot;: 0,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;data&quot;: {
+    &quot;taskId&quot;: &quot;sim-20260930-001&quot;,
+    &quot;status&quot;: &quot;running&quot;,
+    &quot;config&quot;: {
+      &quot;vehicles&quot;: 5,
+      &quot;durationHours&quot;: 8,
+      &quot;frequencyHz&quot;: 1.0,
+      &quot;mode&quot;: &quot;realtime&quot;
+    },
+    &quot;startTime&quot;: &quot;2026-09-30T08:00:00&quot;
+  }
+}
+</code></pre>
+<ul>
+<li><strong>错误响应</strong>：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>HTTP 状态码</th>
+<th>code</th>
+<th>message</th>
+<th>场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>409</td>
+<td>TRAJ_005</td>
+<td>模拟器已运行，请先停止</td>
+<td>重复启动</td>
+</tr>
+<tr>
+<td>503</td>
+<td>TRAJ_008</td>
+<td>模拟器服务不可达</td>
+<td>Python 进程未启动</td>
+</tr>
+<tr>
+<td>403</td>
+<td>IAM_403</td>
+<td>权限不足</td>
+<td>无 traj:admin 权限</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_11">示例</h4>
+<pre><code class="language-bash">curl -X POST &quot;http://localhost:8080/api/traj/simulator/start&quot; \
+  -H &quot;Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{&quot;vehicles&quot;:5,&quot;durationHours&quot;:8,&quot;frequencyHz&quot;:1.0,&quot;mode&quot;:&quot;realtime&quot;}'
+</code></pre>
+<h4 id="_12">变更记录</h4>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>变更内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>初版</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="34">3.4 停止模拟器</h3>
+<ul>
+<li><strong>方法</strong>：POST</li>
+<li><strong>路径</strong>：/api/traj/simulator/stop</li>
+<li><strong>权限</strong>：traj:admin</li>
+<li><strong>描述</strong>：停止正在运行的模拟器</li>
+</ul>
+<h4 id="_13">请求</h4>
+<p>无请求体。</p>
+<h4 id="_14">响应</h4>
+<ul>
+<li><strong>成功</strong>（200）：</li>
+</ul>
+<pre><code class="language-json">{
+  &quot;code&quot;: 0,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;data&quot;: {
+    &quot;taskId&quot;: &quot;sim-20260930-001&quot;,
+    &quot;status&quot;: &quot;stopped&quot;,
+    &quot;stopTime&quot;: &quot;2026-09-30T09:00:00&quot;,
+    &quot;pointsGenerated&quot;: 144000
+  }
+}
+</code></pre>
+<ul>
+<li><strong>错误响应</strong>：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>HTTP 状态码</th>
+<th>code</th>
+<th>message</th>
+<th>场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>409</td>
+<td>TRAJ_004</td>
+<td>模拟器未运行</td>
+<td>状态非 running</td>
+</tr>
+<tr>
+<td>503</td>
+<td>TRAJ_008</td>
+<td>模拟器服务不可达</td>
+<td>Python 进程无响应</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_15">示例</h4>
+<pre><code class="language-bash">curl -X POST &quot;http://localhost:8080/api/traj/simulator/stop&quot; \
+  -H &quot;Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...&quot;
+</code></pre>
+<h4 id="_16">变更记录</h4>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>变更内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>初版</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="35">3.5 查询模拟器状态</h3>
+<ul>
+<li><strong>方法</strong>：GET</li>
+<li><strong>路径</strong>：/api/traj/simulator/status</li>
+<li><strong>权限</strong>：traj:view</li>
+<li><strong>描述</strong>：查询模拟器当前运行状态</li>
+</ul>
+<h4 id="_17">请求</h4>
+<p>无查询参数。</p>
+<h4 id="_18">响应</h4>
+<ul>
+<li><strong>成功</strong>（200）：</li>
+</ul>
+<pre><code class="language-json">{
+  &quot;code&quot;: 0,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;data&quot;: {
+    &quot;status&quot;: &quot;running&quot;,
+    &quot;taskId&quot;: &quot;sim-20260930-001&quot;,
+    &quot;vehicles&quot;: 5,
+    &quot;pointsGenerated&quot;: 144000,
+    &quot;uptime&quot;: &quot;02:00:00&quot;,
+    &quot;startTime&quot;: &quot;2026-09-30T08:00:00&quot;,
+    &quot;config&quot;: {
+      &quot;vehicles&quot;: 5,
+      &quot;durationHours&quot;: 8,
+      &quot;frequencyHz&quot;: 1.0,
+      &quot;mode&quot;: &quot;realtime&quot;
+    }
+  }
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>status</td>
+<td>string</td>
+<td>状态：running / stopped / error</td>
+</tr>
+<tr>
+<td>taskId</td>
+<td>string</td>
+<td>任务ID</td>
+</tr>
+<tr>
+<td>vehicles</td>
+<td>integer</td>
+<td>当前模拟车辆数</td>
+</tr>
+<tr>
+<td>pointsGenerated</td>
+<td>long</td>
+<td>已生成轨迹点总数</td>
+</tr>
+<tr>
+<td>uptime</td>
+<td>string</td>
+<td>运行时长 HH:mm:ss</td>
+</tr>
+<tr>
+<td>startTime</td>
+<td>string</td>
+<td>启动时间</td>
+</tr>
+<tr>
+<td>config</td>
+<td>object</td>
+<td>启动时的配置参数</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>错误响应</strong>：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>HTTP 状态码</th>
+<th>code</th>
+<th>message</th>
+<th>场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>503</td>
+<td>TRAJ_008</td>
+<td>模拟器服务不可达</td>
+<td>Python 进程无响应</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_19">示例</h4>
+<pre><code class="language-bash">curl -X GET &quot;http://localhost:8080/api/traj/simulator/status&quot; \
+  -H &quot;Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...&quot;
+</code></pre>
+<h4 id="_20">变更记录</h4>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>变更内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>初版</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="36">3.6 触发批量导入</h3>
+<ul>
+<li><strong>方法</strong>：POST</li>
+<li><strong>路径</strong>：/api/traj/simulator/batch-import</li>
+<li><strong>权限</strong>：traj:admin</li>
+<li><strong>描述</strong>：触发模拟器一次性生成并批量导入完整时段的轨迹数据</li>
+</ul>
+<h4 id="_21">请求</h4>
+<ul>
+<li><strong>请求体</strong>：</li>
+</ul>
+<pre><code class="language-json">{
+  &quot;vehicles&quot;: 5,
+  &quot;durationHours&quot;: 8,
+  &quot;frequencyHz&quot;: 1.0,
+  &quot;avgSpeedKmh&quot;: 40
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>必填</th>
+<th>默认</th>
+<th>校验规则</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>vehicles</td>
+<td>integer</td>
+<td>否</td>
+<td>5</td>
+<td>1 ~ 20</td>
+<td>模拟车辆数</td>
+</tr>
+<tr>
+<td>durationHours</td>
+<td>integer</td>
+<td>否</td>
+<td>8</td>
+<td>1 ~ 24</td>
+<td>模拟时长</td>
+</tr>
+<tr>
+<td>frequencyHz</td>
+<td>double</td>
+<td>否</td>
+<td>1.0</td>
+<td>0.5 ~ 5.0</td>
+<td>采样频率</td>
+</tr>
+<tr>
+<td>avgSpeedKmh</td>
+<td>double</td>
+<td>否</td>
+<td>40.0</td>
+<td>20 ~ 80</td>
+<td>平均速度</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_22">响应</h4>
+<ul>
+<li><strong>成功</strong>（200）：</li>
+</ul>
+<pre><code class="language-json">{
+  &quot;code&quot;: 0,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;data&quot;: {
+    &quot;taskId&quot;: &quot;batch-20260930-001&quot;,
+    &quot;status&quot;: &quot;completed&quot;,
+    &quot;totalPoints&quot;: 144000,
+    &quot;importedPoints&quot;: 144000,
+    &quot;failedPoints&quot;: 0,
+    &quot;duration&quot;: &quot;00:00:25&quot;
+  }
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>totalPoints</td>
+<td>long</td>
+<td>生成轨迹点总数</td>
+</tr>
+<tr>
+<td>importedPoints</td>
+<td>long</td>
+<td>成功导入数量</td>
+</tr>
+<tr>
+<td>failedPoints</td>
+<td>long</td>
+<td>失败数量</td>
+</tr>
+<tr>
+<td>duration</td>
+<td>string</td>
+<td>导入耗时 HH:mm:ss</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>错误响应</strong>：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>HTTP 状态码</th>
+<th>code</th>
+<th>message</th>
+<th>场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>503</td>
+<td>TRAJ_008</td>
+<td>模拟器服务不可达</td>
+<td>Python 进程无响应</td>
+</tr>
+<tr>
+<td>403</td>
+<td>IAM_403</td>
+<td>权限不足</td>
+<td>无 traj:admin 权限</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_23">示例</h4>
+<pre><code class="language-bash">curl -X POST &quot;http://localhost:8080/api/traj/simulator/batch-import&quot; \
+  -H &quot;Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{&quot;vehicles&quot;:5,&quot;durationHours&quot;:8,&quot;frequencyHz&quot;:1.0}'
+</code></pre>
+<h4 id="_24">变更记录</h4>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>变更内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>初版</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4">4. 错误码</h2>
+<table>
+<thead>
+<tr>
+<th>code</th>
+<th>HTTP</th>
+<th>message</th>
+<th>场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TRAJ_001</td>
+<td>400</td>
+<td>设备号不存在</td>
+<td>identityCode 未登记</td>
+</tr>
+<tr>
+<td>TRAJ_002</td>
+<td>400</td>
+<td>经纬度超出中国范围</td>
+<td>坐标越界</td>
+</tr>
+<tr>
+<td>TRAJ_003</td>
+<td>400</td>
+<td>GPS时间超前于当前时间</td>
+<td>时间戳在未来</td>
+</tr>
+<tr>
+<td>TRAJ_004</td>
+<td>409</td>
+<td>模拟器未运行</td>
+<td>stop/status 时未运行</td>
+</tr>
+<tr>
+<td>TRAJ_005</td>
+<td>409</td>
+<td>模拟器已运行</td>
+<td>重复 start</td>
+</tr>
+<tr>
+<td>TRAJ_008</td>
+<td>503</td>
+<td>模拟器服务不可达</td>
+<td>Python 进程无响应</td>
+</tr>
+<tr>
+<td>IAM_403</td>
+<td>403</td>
+<td>权限不足</td>
+<td>无对应权限码</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5">5. 修订记录</h2>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>日期</th>
+<th>修订人</th>
+<th>修订内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>2026-09-30</td>
+<td>system</td>
+<td>初版：6 个模拟器控制与数据接入接口</td>
+</tr>
+</tbody>
+</table>
+  </main>
+</div>
+<script>
+// 移动端：点击目录链接后自动收起抽屉
+document.querySelectorAll('.toc a').forEach(function(a){
+  a.addEventListener('click',function(){document.querySelector('.toc').classList.remove('open');});
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+// 初始化 Mermaid 图表渲染
+if (window.mermaid) {
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  // 将 fenced code block 的 mermaid 代码转换为 mermaid div
+  document.querySelectorAll('pre code.language-mermaid').forEach(function(block) {
+    var pre = block.parentElement;
+    var div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = block.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.run();
+}
+</script>
+</body>
+</html>

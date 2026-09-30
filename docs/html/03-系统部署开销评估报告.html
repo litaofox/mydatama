@@ -648,5 +648,21 @@ document.querySelectorAll('.toc a').forEach(function(a){
   a.addEventListener('click',function(){document.querySelector('.toc').classList.remove('open');});
 });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+// 初始化 Mermaid 图表渲染
+if (window.mermaid) {
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  // 将 fenced code block 的 mermaid 代码转换为 mermaid div
+  document.querySelectorAll('pre code.language-mermaid').forEach(function(block) {
+    var pre = block.parentElement;
+    var div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = block.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.run();
+}
+</script>
 </body>
 </html>

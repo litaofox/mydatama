@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UC-TRAJ-002-轨迹回放</title>
+<style>
+:root{
+  --primary:#1f5fbf; --primary-dark:#174a96; --bg:#f4f6fa; --card:#ffffff;
+  --text:#1f2733; --muted:#667085; --border:#e3e8f0; --code-bg:#1e2530;
+  --accent-bg:#eef4ff; --th-bg:#1f5fbf; --th-text:#fff;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.85;font-size:16px;}
+.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:var(--primary-dark);
+  color:#fff;display:flex;align-items:center;padding:0 20px;z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.topbar .home{color:#fff;text-decoration:none;font-size:14px;opacity:.85;margin-right:18px;white-space:nowrap;}
+.topbar .home:hover{opacity:1;}
+.topbar .title{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.layout{display:flex;max-width:1280px;margin:56px auto 0;}
+.toc{width:260px;flex-shrink:0;padding:24px 0 24px 20px;}
+.toc-inner{position:sticky;top:76px;max-height:calc(100vh - 100px);overflow-y:auto;
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 14px;}
+.toc-inner .toc-title{font-size:13px;font-weight:700;color:var(--muted);
+  letter-spacing:1px;margin:0 0 10px 4px;}
+.toc-inner ul{list-style:none;margin:0;padding:0;}
+.toc-inner ul ul{padding-left:14px;}
+.toc-inner li{margin:3px 0;}
+.toc-inner a{display:block;color:#44506a;text-decoration:none;font-size:13.5px;
+  line-height:1.5;padding:3px 8px;border-radius:6px;border-left:2px solid transparent;}
+.toc-inner a:hover{background:var(--accent-bg);color:var(--primary);}
+.content{flex:1;min-width:0;background:var(--card);margin:20px 24px 60px;padding:40px 52px;
+  border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 1px 4px rgba(16,42,90,.05);}
+h1{font-size:28px;color:var(--primary-dark);border-bottom:3px solid var(--primary);
+  padding-bottom:14px;margin-top:0;}
+h2{font-size:22px;color:var(--primary-dark);margin-top:42px;
+  border-left:5px solid var(--primary);padding-left:12px;}
+h3{font-size:18px;color:#28456e;margin-top:32px;}
+h4{font-size:16px;color:#344054;margin-top:24px;}
+p{margin:14px 0;}
+blockquote{margin:18px 0;padding:12px 18px;background:var(--accent-bg);
+  border-left:4px solid var(--primary);color:#3d4a5c;border-radius:0 8px 8px 0;}
+blockquote p{margin:6px 0;}
+a{color:var(--primary);}
+ul,ol{padding-left:26px;}
+li{margin:5px 0;}
+code{font-family:Consolas,"Courier New",monospace;font-size:13.5px;
+  background:#eef1f6;color:#b02a5e;padding:2px 6px;border-radius:4px;}
+pre{background:var(--code-bg);color:#d7e0ee;border-radius:10px;padding:18px 20px;
+  overflow-x:auto;line-height:1.55;font-size:13.5px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);}
+pre code{background:none;color:inherit;padding:0;font-size:inherit;}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:14.5px;
+  box-shadow:0 1px 3px rgba(16,42,90,.08);border-radius:8px;overflow:hidden;}
+th{background:var(--th-bg);color:var(--th-text);font-weight:600;padding:10px 14px;
+  text-align:left;border:1px solid var(--primary);white-space:nowrap;}
+td{padding:9px 14px;border:1px solid var(--border);vertical-align:top;}
+tbody tr:nth-child(even){background:#f7f9fd;}
+tbody tr:hover{background:var(--accent-bg);}
+hr{border:none;border-top:1px solid var(--border);margin:36px 0;}
+strong{color:#16345f;}
+h1 strong,h2 strong,h3 strong{color:inherit;}
+.toc-btn{display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
+  color:#fff;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer;margin-right:12px;}
+@media (max-width:900px){
+  .toc{display:block;position:fixed;top:56px;left:0;bottom:0;width:280px;z-index:90;
+    padding:16px;background:var(--bg);transform:translateX(-100%);transition:transform .25s;
+    overflow-y:auto;}
+  .toc.open{transform:translateX(0);box-shadow:4px 0 16px rgba(0,0,0,.15);}
+  .toc-btn{display:inline-block;}
+  .content{margin:12px 10px 40px;padding:24px 18px;}
+  .topbar .title{font-size:13px;}
+  table{font-size:13px;display:block;overflow-x:auto;}
+}
+@media print{
+  .topbar,.toc{display:none;}
+  .layout{margin:0;}
+  .content{border:none;box-shadow:none;margin:0;padding:0;}
+  pre,table,blockquote{break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="toc-btn" onclick="document.querySelector('.toc').classList.toggle('open')">☰ 目录</button>
+  <a class="home" href="index.html">← 文档首页</a>
+  <span class="title">UC-TRAJ-002-轨迹回放</span>
+</div>
+<div class="layout">
+  <aside class="toc"><div class="toc-inner">
+    <p class="toc-title">目录导航</p>
+    
+<ul>
+<li><a href="#uc-traj-002">UC-TRAJ-002 轨迹回放</a><ul>
+<li><a href="#1">1. 用例概述</a><ul>
+<li><a href="#11">1.1 用例名称</a></li>
+<li><a href="#12">1.2 参与者（角色）</a></li>
+<li><a href="#13">1.3 前置条件</a></li>
+<li><a href="#14">1.4 后置条件（成功）</a></li>
+<li><a href="#15">1.5 后置条件（失败）</a></li>
+</ul>
+</li>
+<li><a href="#2">2. 主流程</a><ul>
+<li><a href="#21">2.1 流程步骤</a></li>
+<li><a href="#22">2.2 流程图</a></li>
+<li><a href="#23">2.3 时序图</a></li>
+</ul>
+</li>
+<li><a href="#3">3. 备选流程</a><ul>
+<li><a href="#31">3.1 回放中查看某点详情</a></li>
+<li><a href="#32">3.2 多车对比回放</a></li>
+<li><a href="#33">3.3 报警点高亮</a></li>
+</ul>
+</li>
+<li><a href="#4">4. 异常流程</a><ul>
+<li><a href="#41">4.1 时间范围内无数据</a></li>
+<li><a href="#42">4.2 查询跨度超限</a></li>
+<li><a href="#43">4.3 数据量过大触发抽样</a></li>
+<li><a href="#44">4.4 查询超时</a></li>
+</ul>
+</li>
+<li><a href="#5">5. 业务规则</a></li>
+<li><a href="#6">6. 界面设计</a><ul>
+<li><a href="#61">6.1 页面布局描述</a></li>
+<li><a href="#62">6.2 交互说明</a></li>
+<li><a href="#63">6.3 权限要求</a></li>
+</ul>
+</li>
+<li><a href="#7">7. 接口调用</a></li>
+<li><a href="#8">8. 数据变更</a></li>
+<li><a href="#9">9. 测试要点</a></li>
+<li><a href="#10">10. 修订记录</a></li>
+</ul>
+</li>
+</ul>
+
+  </div></aside>
+  <main class="content">
+<h1 id="uc-traj-002">UC-TRAJ-002 轨迹回放</h1>
+<blockquote>
+<p>版本：v1.0 ｜ 日期：2026-09-30
+所属模块：TRAJ
+关联文档：MOD-TRAJ-001, API-TRAJ-001, DDL-TRAJ-001</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 用例概述</h2>
+<h3 id="11">1.1 用例名称</h3>
+<p>轨迹回放</p>
+<h3 id="12">1.2 参与者（角色）</h3>
+<table>
+<thead>
+<tr>
+<th>角色</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>查看者（viewer）</td>
+<td>选择车辆与时间范围，播放轨迹回放</td>
+</tr>
+<tr>
+<td>操作员（operator）</td>
+<td>同上，额外可导出回放数据</td>
+</tr>
+<tr>
+<td>系统管理员（admin）</td>
+<td>同上</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13">1.3 前置条件</h3>
+<ol>
+<li>用户已登录并具备 <code>traj:query</code> 权限</li>
+<li>目标设备/车辆在指定时间范围内已有轨迹数据</li>
+<li>前端已加载 Leaflet 地图组件</li>
+</ol>
+<h3 id="14">1.4 后置条件（成功）</h3>
+<ul>
+<li>地图上绘制完整轨迹折线</li>
+<li>车辆图标按时间顺序沿轨迹移动</li>
+<li>可暂停/继续/调速回放</li>
+<li>时间轴显示当前回放进度</li>
+</ul>
+<h3 id="15">1.5 后置条件（失败）</h3>
+<ul>
+<li>地图不绘制轨迹</li>
+<li>显示错误提示（无数据/查询失败）</li>
+</ul>
+<hr />
+<h2 id="2">2. 主流程</h2>
+<h3 id="21">2.1 流程步骤</h3>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>执行者</th>
+<th>动作</th>
+<th>系统响应</th>
+<th>数据变更</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>用户</td>
+<td>进入"轨迹回放"页面</td>
+<td>加载 Leaflet 地图 + 查询表单</td>
+<td>—</td>
+</tr>
+<tr>
+<td>2</td>
+<td>用户</td>
+<td>选择设备号（下拉或输入）</td>
+<td>下拉列表来自 traj_terminal</td>
+<td>—</td>
+</tr>
+<tr>
+<td>3</td>
+<td>用户</td>
+<td>选择时间范围（起始/结束）</td>
+<td>默认最近 1 小时</td>
+<td>—</td>
+</tr>
+<tr>
+<td>4</td>
+<td>用户</td>
+<td>点击"查询轨迹"按钮</td>
+<td>前端发送 GET /api/traj/replay</td>
+<td>—</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Java后端</td>
+<td>校验时间跨度 ≤ 30 天</td>
+<td>超限返回 400</td>
+<td>—</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Java后端</td>
+<td>查询 traj_gps_point</td>
+<td>按 identity_code + 时间范围升序</td>
+<td>—</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Java后端</td>
+<td>若点数 &gt; 5000 则等间隔抽样</td>
+<td>降至 5000 点</td>
+<td>—</td>
+</tr>
+<tr>
+<td>8</td>
+<td>前端</td>
+<td>接收轨迹点列表</td>
+<td>在地图绘制轨迹折线</td>
+<td>—</td>
+</tr>
+<tr>
+<td>9</td>
+<td>前端</td>
+<td>显示播放控件 + 时间轴</td>
+<td>车辆图标置于起点</td>
+<td>—</td>
+</tr>
+<tr>
+<td>10</td>
+<td>用户</td>
+<td>点击播放按钮</td>
+<td>车辆图标沿轨迹移动</td>
+<td>—</td>
+</tr>
+<tr>
+<td>11</td>
+<td>用户</td>
+<td>可拖动时间轴跳转</td>
+<td>车辆图标跳至对应位置</td>
+<td>—</td>
+</tr>
+<tr>
+<td>12</td>
+<td>用户</td>
+<td>可切换 1x/2x/4x 倍速</td>
+<td>调整移动速度</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22">2.2 流程图</h3>
+<pre><code class="language-mermaid">flowchart TD
+    A[进入回放页面] --&gt; B[选择设备+时间范围]
+    B --&gt; C[点击查询轨迹]
+    C --&gt; D{时间跨度&gt;30天?}
+    D -- 是 --&gt; X1[返回400 提示缩小范围]
+    D -- 否 --&gt; E[查询traj_gps_point]
+    E --&gt; F{点数&gt;5000?}
+    F -- 是 --&gt; G[等间隔抽样至5000]
+    F -- 否 --&gt; H[返回全部点]
+    G --&gt; I[前端绘制折线+时间轴]
+    H --&gt; I
+    I --&gt; J[用户点击播放]
+    J --&gt; K[车辆图标沿轨迹移动]
+    K --&gt; L{用户操作}
+    L --&gt;|暂停| M[停止移动]
+    L --&gt;|调速| N[调整速度]
+    L --&gt;|拖动时间轴| O[跳转位置]
+    M --&gt; K
+    N --&gt; K
+    O --&gt; K
+</code></pre>
+<h3 id="23">2.3 时序图</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant U as 用户
+    participant W as 前端回放页
+    participant J as Java后端
+    participant DB as PostgreSQL
+
+    U-&gt;&gt;W: 进入轨迹回放页面
+    W-&gt;&gt;W: 加载Leaflet地图
+    U-&gt;&gt;W: 选择设备号 TERM_001
+    U-&gt;&gt;W: 选择时间范围 最近1小时
+    U-&gt;&gt;W: 点击&quot;查询轨迹&quot;
+    W-&gt;&gt;J: GET /api/traj/replay?identityCode=TERM_001&amp;start=...&amp;end=...
+    J-&gt;&gt;J: 校验时间跨度≤30天
+    J-&gt;&gt;DB: SELECT * FROM traj_gps_point WHERE identity_code='TERM_001' AND gps_time BETWEEN ? AND ? ORDER BY gps_time ASC
+    DB--&gt;&gt;J: 3600条轨迹点
+    J-&gt;&gt;J: 点数&lt;5000，不抽样
+    J--&gt;&gt;W: 200 {points:[{time,lng,lat,speed,direction,alarm}, ...]}
+    W-&gt;&gt;W: Leaflet绘制轨迹折线（蓝色）
+    W-&gt;&gt;W: 添加车辆图标于起点
+    W-&gt;&gt;W: 显示时间轴+播放控件
+    U-&gt;&gt;W: 点击播放
+    W-&gt;&gt;W: 按时间间隔移动车辆图标
+    U-&gt;&gt;W: 切换2x倍速
+    W-&gt;&gt;W: 加倍移动速度
+    U-&gt;&gt;W: 拖动时间轴至中间
+    W-&gt;&gt;W: 车辆图标跳至对应位置
+</code></pre>
+<hr />
+<h2 id="3">3. 备选流程</h2>
+<h3 id="31">3.1 回放中查看某点详情</h3>
+<ul>
+<li><strong>触发条件</strong>：用户点击轨迹上的某个点或车辆图标</li>
+<li><strong>处理步骤</strong>：
+  1. 弹出信息卡片显示该点详情：时间、经纬度、速度、方向、报警标志
+  2. 关闭卡片后继续回放</li>
+</ul>
+<h3 id="32">3.2 多车对比回放</h3>
+<ul>
+<li><strong>触发条件</strong>：用户选择多个设备号</li>
+<li><strong>处理步骤</strong>：
+  1. 同时查询多设备轨迹
+  2. 地图上用不同颜色折线绘制
+  3. 多个车辆图标同步播放</li>
+</ul>
+<h3 id="33">3.3 报警点高亮</h3>
+<ul>
+<li><strong>触发条件</strong>：轨迹中存在 <code>alarm_flag=1</code> 的点</li>
+<li><strong>处理步骤</strong>：
+  1. 报警点用红色圆点标记
+  2. 回放至报警点时弹出报警提示</li>
+</ul>
+<hr />
+<h2 id="4">4. 异常流程</h2>
+<h3 id="41">4.1 时间范围内无数据</h3>
+<table>
+<thead>
+<tr>
+<th>触发条件</th>
+<th>系统行为</th>
+<th>用户可见结果</th>
+<th>错误码</th>
+<th>数据回滚</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>查询结果为空</td>
+<td>返回空列表</td>
+<td>地图无折线，提示"该时间范围无轨迹数据"</td>
+<td>—</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42">4.2 查询跨度超限</h3>
+<table>
+<thead>
+<tr>
+<th>触发条件</th>
+<th>系统行为</th>
+<th>用户可见结果</th>
+<th>错误码</th>
+<th>数据回滚</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>时间跨度 &gt; 30 天</td>
+<td>返回 400</td>
+<td>"查询时间范围不能超过30天，请缩小范围"</td>
+<td>TRAJ_006 / 400</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43">4.3 数据量过大触发抽样</h3>
+<table>
+<thead>
+<tr>
+<th>触发条件</th>
+<th>系统行为</th>
+<th>用户可见结果</th>
+<th>错误码</th>
+<th>数据回滚</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>原始点数 &gt; 5000</td>
+<td>服务端抽样至 5000</td>
+<td>时间轴标注"已抽样"，轨迹略有简化</td>
+<td>TRAJ_007 / 200</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<h3 id="44">4.4 查询超时</h3>
+<table>
+<thead>
+<tr>
+<th>触发条件</th>
+<th>系统行为</th>
+<th>用户可见结果</th>
+<th>错误码</th>
+<th>数据回滚</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据库查询超过 10 秒</td>
+<td>返回 500</td>
+<td>"查询超时，请缩小时间范围"</td>
+<td>500</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5">5. 业务规则</h2>
+<table>
+<thead>
+<tr>
+<th>规则编号</th>
+<th>规则描述</th>
+<th>约束值/公式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TRAJ-R-101</td>
+<td>回放时间跨度上限</td>
+<td>30 天</td>
+</tr>
+<tr>
+<td>TRAJ-R-102</td>
+<td>回放最大返回点数</td>
+<td>5000（超出则等间隔抽样）</td>
+</tr>
+<tr>
+<td>TRAJ-R-103</td>
+<td>抽样策略</td>
+<td>等间隔抽样，保留首尾点</td>
+</tr>
+<tr>
+<td>TRAJ-R-104</td>
+<td>回放倍速选项</td>
+<td>1x, 2x, 4x, 8x</td>
+</tr>
+<tr>
+<td>TRAJ-R-105</td>
+<td>轨迹折线颜色</td>
+<td>正常段蓝色 #1890ff，报警段红色 #ff4d4f</td>
+</tr>
+<tr>
+<td>TRAJ-R-106</td>
+<td>车辆图标方向</td>
+<td>根据 direction 字段旋转图标</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6">6. 界面设计</h2>
+<h3 id="61">6.1 页面布局描述</h3>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│  轨迹回放                                            │
+├─────────────────────────────────────────────────────┤
+│ 设备号: [TERM_001 ▼]  起始: [2026-09-30 08:00]      │
+│ 结束:   [2026-09-30 09:00]  [查询轨迹]  [导出]      │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│                                                     │
+│              [Leaflet 地图区域]                      │
+│            （轨迹折线 + 车辆图标）                    │
+│                                                     │
+│                                                     │
+├─────────────────────────────────────────────────────┤
+│ ◀  [▶播放] [⏸暂停]  1x [▼]   08:00:00 ▬▬▬●▬▬ 09:00 │
+└─────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="62">6.2 交互说明</h3>
+<ul>
+<li>查询表单固定在顶部，地图占据主要区域</li>
+<li>播放控件固定在底部，时间轴可拖动</li>
+<li>点击地图上的轨迹点弹出详情卡片</li>
+<li>鼠标滚轮缩放地图，拖拽平移</li>
+<li>报警点用红色脉冲动画标记</li>
+</ul>
+<h3 id="63">6.3 权限要求</h3>
+<ul>
+<li>查询与回放：<code>traj:query</code>（viewer/ operator/ admin）</li>
+<li>导出按钮：<code>traj:export</code>（operator/admin）</li>
+</ul>
+<hr />
+<h2 id="7">7. 接口调用</h2>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>接口</th>
+<th>方法</th>
+<th>请求摘要</th>
+<th>响应摘要</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4</td>
+<td>/api/traj/replay</td>
+<td>GET</td>
+<td>?identityCode=TERM_001&amp;start=2026-09-30T08:00&amp;end=2026-09-30T09:00</td>
+<td>{points:[{time,lng,lat,speed,direction,alarmFlag}], total:3600, sampled:false}</td>
+</tr>
+<tr>
+<td>导出</td>
+<td>/api/traj/export</td>
+<td>GET</td>
+<td>?identityCode=TERM_001&amp;start=...&amp;end=...&amp;format=csv</td>
+<td>文件下载（CSV）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8">8. 数据变更</h2>
+<p>本用例为纯查询，无数据变更。</p>
+<hr />
+<h2 id="9">9. 测试要点</h2>
+<table>
+<thead>
+<tr>
+<th>测试场景</th>
+<th>预期结果</th>
+<th>测试数据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>查询1小时轨迹</td>
+<td>返回3600点，地图绘制折线</td>
+<td>TERM_001 最近1小时</td>
+</tr>
+<tr>
+<td>查询无数据时段</td>
+<td>返回空列表，提示无数据</td>
+<td>未来时间范围</td>
+</tr>
+<tr>
+<td>查询跨度&gt;30天</td>
+<td>返回400，提示缩小范围</td>
+<td>起始=30天前，结束=今天</td>
+</tr>
+<tr>
+<td>查询跨度30天整</td>
+<td>正常返回</td>
+<td>起始=30天前，结束=今天</td>
+</tr>
+<tr>
+<td>超过5000点抽样</td>
+<td>返回5000点，sampled=true</td>
+<td>2小时数据（7200点）</td>
+</tr>
+<tr>
+<td>播放轨迹</td>
+<td>车辆图标从起点沿折线移动</td>
+<td>3600点轨迹</td>
+</tr>
+<tr>
+<td>切换2x倍速</td>
+<td>移动速度加倍</td>
+<td>播放中</td>
+</tr>
+<tr>
+<td>拖动时间轴</td>
+<td>图标跳至对应位置</td>
+<td>拖至中间</td>
+</tr>
+<tr>
+<td>报警点高亮</td>
+<td>红色标记，播放时弹出提示</td>
+<td>含 alarm_flag=1 的轨迹</td>
+</tr>
+<tr>
+<td>viewer导出</td>
+<td>返回403</td>
+<td>viewer角色点击导出</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10">10. 修订记录</h2>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>日期</th>
+<th>修订人</th>
+<th>修订内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>2026-09-30</td>
+<td>system</td>
+<td>初版</td>
+</tr>
+</tbody>
+</table>
+  </main>
+</div>
+<script>
+// 移动端：点击目录链接后自动收起抽屉
+document.querySelectorAll('.toc a').forEach(function(a){
+  a.addEventListener('click',function(){document.querySelector('.toc').classList.remove('open');});
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+// 初始化 Mermaid 图表渲染
+if (window.mermaid) {
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  // 将 fenced code block 的 mermaid 代码转换为 mermaid div
+  document.querySelectorAll('pre code.language-mermaid').forEach(function(block) {
+    var pre = block.parentElement;
+    var div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = block.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.run();
+}
+</script>
+</body>
+</html>

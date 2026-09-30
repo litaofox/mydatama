@@ -17,6 +17,15 @@ DOCS = [
     ("docs/research/02-中文开源项目功能与应用场景调研.md", "北斗项目前置研究", "10+ 中文开源项目对比、成熟度评估与选型建议"),
     ("docs/research/03-导航系统数据采集与应用平台设计.md", "北斗项目前置研究", "轨迹与视频采集、治理合规、平台总体技术设计"),
     ("docs/research/04-数据产品加工生成模块设计.md", "北斗项目前置研究", "数据产品加工流水线、合规校验、登记挂牌与交易全流程对接"),
+    ("docs/design/00-文档体系总览与模板规范.md", "详细设计文档体系", "文档编号规则、完整清单、标准模板与编写规范"),
+    ("docs/design/ddl/DDL-TRAJ-001-TRAJ-Schema数据库设计.md", "TRAJ 轨迹模块设计", "PostgreSQL+PostGIS 轨迹点表、8张业务表DDL、种子数据与ER图"),
+    ("docs/design/mod/MOD-TRAJ-001-轨迹数据模拟与可视化模块设计.md", "TRAJ 轨迹模块设计", "模拟器架构、核心组件、业务流程、接口清单、异常处理与扩展点"),
+    ("docs/design/uc/UC-TRAJ-001-模拟数据生成与启动.md", "TRAJ 轨迹模块设计", "模拟器启停流程、参数配置、数据推送与异常处理"),
+    ("docs/design/uc/UC-TRAJ-002-轨迹回放.md", "TRAJ 轨迹模块设计", "轨迹回放查询、抽样策略、播放控件与报警点高亮"),
+    ("docs/design/uc/UC-TRAJ-003-轨迹查询.md", "TRAJ 轨迹模块设计", "多条件筛选查询、地图视野筛选、结果导出与联动"),
+    ("docs/design/uc/UC-TRAJ-004-轨迹总览大屏.md", "TRAJ 轨迹模块设计", "4统计卡片+实时位置地图+2图表、轮询刷新与降级策略"),
+    ("docs/design/api/API-TRAJ-001-轨迹数据接口规格.md", "TRAJ 轨迹模块设计", "查询/回放/指标/导出/大屏聚合共8个接口完整规格"),
+    ("docs/design/api/API-TRAJ-002-模拟器控制接口规格.md", "TRAJ 轨迹模块设计", "数据接入/模拟器启停/状态/批量导入共6个接口规格"),
 ]
 
 CSS = r"""
@@ -164,6 +173,22 @@ def to_html(md_path: str, title: str):
 document.querySelectorAll('.toc a').forEach(function(a){{
   a.addEventListener('click',function(){{document.querySelector('.toc').classList.remove('open');}});
 }});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+// 初始化 Mermaid 图表渲染
+if (window.mermaid) {{
+  mermaid.initialize({{ startOnLoad: true, theme: 'default', securityLevel: 'loose' }});
+  // 将 fenced code block 的 mermaid 代码转换为 mermaid div
+  document.querySelectorAll('pre code.language-mermaid').forEach(function(block) {{
+    var pre = block.parentElement;
+    var div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = block.textContent;
+    pre.replaceWith(div);
+  }});
+  mermaid.run();
+}}
 </script>
 </body>
 </html>"""

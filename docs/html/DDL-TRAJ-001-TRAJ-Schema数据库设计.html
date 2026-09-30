@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DDL-TRAJ-001-TRAJ-Schema数据库设计</title>
+<style>
+:root{
+  --primary:#1f5fbf; --primary-dark:#174a96; --bg:#f4f6fa; --card:#ffffff;
+  --text:#1f2733; --muted:#667085; --border:#e3e8f0; --code-bg:#1e2530;
+  --accent-bg:#eef4ff; --th-bg:#1f5fbf; --th-text:#fff;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.85;font-size:16px;}
+.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:var(--primary-dark);
+  color:#fff;display:flex;align-items:center;padding:0 20px;z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.topbar .home{color:#fff;text-decoration:none;font-size:14px;opacity:.85;margin-right:18px;white-space:nowrap;}
+.topbar .home:hover{opacity:1;}
+.topbar .title{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.layout{display:flex;max-width:1280px;margin:56px auto 0;}
+.toc{width:260px;flex-shrink:0;padding:24px 0 24px 20px;}
+.toc-inner{position:sticky;top:76px;max-height:calc(100vh - 100px);overflow-y:auto;
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 14px;}
+.toc-inner .toc-title{font-size:13px;font-weight:700;color:var(--muted);
+  letter-spacing:1px;margin:0 0 10px 4px;}
+.toc-inner ul{list-style:none;margin:0;padding:0;}
+.toc-inner ul ul{padding-left:14px;}
+.toc-inner li{margin:3px 0;}
+.toc-inner a{display:block;color:#44506a;text-decoration:none;font-size:13.5px;
+  line-height:1.5;padding:3px 8px;border-radius:6px;border-left:2px solid transparent;}
+.toc-inner a:hover{background:var(--accent-bg);color:var(--primary);}
+.content{flex:1;min-width:0;background:var(--card);margin:20px 24px 60px;padding:40px 52px;
+  border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 1px 4px rgba(16,42,90,.05);}
+h1{font-size:28px;color:var(--primary-dark);border-bottom:3px solid var(--primary);
+  padding-bottom:14px;margin-top:0;}
+h2{font-size:22px;color:var(--primary-dark);margin-top:42px;
+  border-left:5px solid var(--primary);padding-left:12px;}
+h3{font-size:18px;color:#28456e;margin-top:32px;}
+h4{font-size:16px;color:#344054;margin-top:24px;}
+p{margin:14px 0;}
+blockquote{margin:18px 0;padding:12px 18px;background:var(--accent-bg);
+  border-left:4px solid var(--primary);color:#3d4a5c;border-radius:0 8px 8px 0;}
+blockquote p{margin:6px 0;}
+a{color:var(--primary);}
+ul,ol{padding-left:26px;}
+li{margin:5px 0;}
+code{font-family:Consolas,"Courier New",monospace;font-size:13.5px;
+  background:#eef1f6;color:#b02a5e;padding:2px 6px;border-radius:4px;}
+pre{background:var(--code-bg);color:#d7e0ee;border-radius:10px;padding:18px 20px;
+  overflow-x:auto;line-height:1.55;font-size:13.5px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);}
+pre code{background:none;color:inherit;padding:0;font-size:inherit;}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:14.5px;
+  box-shadow:0 1px 3px rgba(16,42,90,.08);border-radius:8px;overflow:hidden;}
+th{background:var(--th-bg);color:var(--th-text);font-weight:600;padding:10px 14px;
+  text-align:left;border:1px solid var(--primary);white-space:nowrap;}
+td{padding:9px 14px;border:1px solid var(--border);vertical-align:top;}
+tbody tr:nth-child(even){background:#f7f9fd;}
+tbody tr:hover{background:var(--accent-bg);}
+hr{border:none;border-top:1px solid var(--border);margin:36px 0;}
+strong{color:#16345f;}
+h1 strong,h2 strong,h3 strong{color:inherit;}
+.toc-btn{display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
+  color:#fff;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer;margin-right:12px;}
+@media (max-width:900px){
+  .toc{display:block;position:fixed;top:56px;left:0;bottom:0;width:280px;z-index:90;
+    padding:16px;background:var(--bg);transform:translateX(-100%);transition:transform .25s;
+    overflow-y:auto;}
+  .toc.open{transform:translateX(0);box-shadow:4px 0 16px rgba(0,0,0,.15);}
+  .toc-btn{display:inline-block;}
+  .content{margin:12px 10px 40px;padding:24px 18px;}
+  .topbar .title{font-size:13px;}
+  table{font-size:13px;display:block;overflow-x:auto;}
+}
+@media print{
+  .topbar,.toc{display:none;}
+  .layout{margin:0;}
+  .content{border:none;box-shadow:none;margin:0;padding:0;}
+  pre,table,blockquote{break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="toc-btn" onclick="document.querySelector('.toc').classList.toggle('open')">☰ 目录</button>
+  <a class="home" href="index.html">← 文档首页</a>
+  <span class="title">DDL-TRAJ-001-TRAJ-Schema数据库设计</span>
+</div>
+<div class="layout">
+  <aside class="toc"><div class="toc-inner">
+    <p class="toc-title">目录导航</p>
+    
+<ul>
+<li><a href="#ddl-traj-001-traj-schema">DDL-TRAJ-001 TRAJ Schema 数据库设计</a><ul>
+<li><a href="#1">1. 概述</a><ul>
+<li><a href="#11-schema">1.1 Schema 用途</a></li>
+<li><a href="#12">1.2 表清单</a></li>
+</ul>
+</li>
+<li><a href="#2">2. 公共字段规范</a></li>
+<li><a href="#3">3. 表设计详情</a><ul>
+<li><a href="#31-traj_gps_point">3.1 traj_gps_point</a><ul>
+<li><a href="#_1">字段定义</a></li>
+<li><a href="#_2">索引</a></li>
+<li><a href="#ddl">DDL</a></li>
+<li><a href="#_3">软删与唯一约束</a></li>
+<li><a href="#_4">关联关系</a></li>
+<li><a href="#_5">读写规则</a></li>
+</ul>
+</li>
+<li><a href="#32-traj_vehicle">3.2 traj_vehicle</a><ul>
+<li><a href="#_6">字段定义</a></li>
+<li><a href="#_7">索引</a></li>
+<li><a href="#ddl_1">DDL</a></li>
+<li><a href="#_8">软删与唯一约束</a></li>
+<li><a href="#_9">关联关系</a></li>
+<li><a href="#_10">读写规则</a></li>
+</ul>
+</li>
+<li><a href="#33-traj_terminal">3.3 traj_terminal</a><ul>
+<li><a href="#_11">字段定义</a></li>
+<li><a href="#ddl_2">DDL</a></li>
+<li><a href="#_12">关联关系</a></li>
+</ul>
+</li>
+<li><a href="#34-traj_driver">3.4 traj_driver</a><ul>
+<li><a href="#_13">字段定义</a></li>
+<li><a href="#ddl_3">DDL</a></li>
+<li><a href="#_14">安全说明</a></li>
+</ul>
+</li>
+<li><a href="#35-traj_vehicle_driver">3.5 traj_vehicle_driver</a><ul>
+<li><a href="#_15">字段定义</a></li>
+<li><a href="#ddl_4">DDL</a></li>
+</ul>
+</li>
+<li><a href="#36-traj_vehicle_terminal">3.6 traj_vehicle_terminal</a><ul>
+<li><a href="#_16">字段定义</a></li>
+<li><a href="#ddl_5">DDL</a></li>
+</ul>
+</li>
+<li><a href="#37-traj_warn_info">3.7 traj_warn_info</a><ul>
+<li><a href="#_17">字段定义</a></li>
+<li><a href="#ddl_6">DDL</a></li>
+</ul>
+</li>
+<li><a href="#38-traj_gps_photo">3.8 traj_gps_photo</a><ul>
+<li><a href="#_18">字段定义</a></li>
+<li><a href="#ddl_7">DDL</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#4">4. 种子数据</a><ul>
+<li><a href="#41">4.1 车辆与终端绑定数据</a></li>
+<li><a href="#42">4.2 报警类型种子</a></li>
+</ul>
+</li>
+<li><a href="#5-er">5. ER 片图</a></li>
+<li><a href="#6">6. 迁移脚本</a><ul>
+<li><a href="#61">6.1 迁移脚本规范</a></li>
+<li><a href="#62-langdisql">6.2 从 langdi.sql 迁移适配要点</a></li>
+</ul>
+</li>
+<li><a href="#7">7. 验收标准</a></li>
+<li><a href="#8">8. 修订记录</a></li>
+</ul>
+</li>
+</ul>
+
+  </div></aside>
+  <main class="content">
+<h1 id="ddl-traj-001-traj-schema">DDL-TRAJ-001 TRAJ Schema 数据库设计</h1>
+<blockquote>
+<p>版本：v1.0 ｜ 日期：2026-09-30
+数据库：PostgreSQL 16 + PostGIS 3.4
+Schema：traj
+关联文档：MOD-TRAJ-001, API-TRAJ-001, API-TRAJ-002, SYS-005</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 概述</h2>
+<h3 id="11-schema">1.1 Schema 用途</h3>
+<p><code>traj</code> schema 存储北斗导航系统接入的轨迹数据及配套业务实体，支撑模拟数据生成、轨迹回放、轨迹查询、轨迹总览大屏四大用例。该 schema 是 TRAJ 模块唯一的持久化层，所有轨迹点采用 PostGIS <code>geometry(Point, 4326)</code> 存储以支持空间索引与空间查询。</p>
+<p><strong>设计原则</strong>：
+- 忠实迁移 <code>langdi.sql</code>（MySQL 5.7）原有业务表结构至 PostgreSQL 16，保留字段语义与注释
+- 新建 <code>traj_gps_point</code> 表存储轨迹点，使用 PostGIS 几何类型并建立空间索引
+- 所有表采用 <code>snake_case</code> 命名，遵循 PostgreSQL 规范
+- 公共审计字段（<code>creator</code>/<code>create_date</code>/<code>updater</code>/<code>update_date</code>/<code>valid_mark</code>）统一规范
+- 软删除使用 <code>valid_mark</code> 标志位（1=有效，0=无效），不使用物理删除</p>
+<h3 id="12">1.2 表清单</h3>
+<table>
+<thead>
+<tr>
+<th>表名</th>
+<th>中文名</th>
+<th>用途</th>
+<th>行量级</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>traj_gps_point</td>
+<td>轨迹点表</td>
+<td>存储车辆/人员 GPS 轨迹点，含 PostGIS 几何字段</td>
+<td>百万级（5车×8小时×1Hz≈14.4万/日）</td>
+</tr>
+<tr>
+<td>traj_vehicle</td>
+<td>车辆基础信息表</td>
+<td>车辆台账（车牌、VIN、所属组织等）</td>
+<td>千级</td>
+</tr>
+<tr>
+<td>traj_terminal</td>
+<td>终端信息表</td>
+<td>北斗终端设备台账（设备号、协议、SIM等）</td>
+<td>千级</td>
+</tr>
+<tr>
+<td>traj_driver</td>
+<td>驾驶员信息表</td>
+<td>驾驶员档案（姓名、身份证、资格证等）</td>
+<td>千级</td>
+</tr>
+<tr>
+<td>traj_vehicle_driver</td>
+<td>车辆-司机关联表</td>
+<td>车辆与驾驶员多对多绑定关系</td>
+<td>千级</td>
+</tr>
+<tr>
+<td>traj_vehicle_terminal</td>
+<td>车辆-终端关联表</td>
+<td>车辆与终端多对多绑定关系</td>
+<td>千级</td>
+</tr>
+<tr>
+<td>traj_warn_info</td>
+<td>报警信息表</td>
+<td>终端上报的报警事件</td>
+<td>万级/日</td>
+</tr>
+<tr>
+<td>traj_gps_photo</td>
+<td>车辆拍照信息表</td>
+<td>终端抓拍图片元数据</td>
+<td>万级</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2">2. 公共字段规范</h2>
+<p>以下字段出现在所有业务表中（<code>traj_gps_point</code> 除外，其有独立的时间字段规范），定义统一含义：</p>
+<table>
+<thead>
+<tr>
+<th>字段名</th>
+<th>类型</th>
+<th>可空</th>
+<th>默认</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>bigserial</td>
+<td>否</td>
+<td>—</td>
+<td>主键，自增</td>
+</tr>
+<tr>
+<td>valid_mark</td>
+<td>smallint</td>
+<td>否</td>
+<td>1</td>
+<td>有效标志：1=有效，0=无效（软删除）</td>
+</tr>
+<tr>
+<td>creator</td>
+<td>varchar(40)</td>
+<td>否</td>
+<td>—</td>
+<td>创建人（用户名或系统标识）</td>
+</tr>
+<tr>
+<td>create_date</td>
+<td>timestamp</td>
+<td>否</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>创建时间</td>
+</tr>
+<tr>
+<td>updater</td>
+<td>varchar(40)</td>
+<td>是</td>
+<td>NULL</td>
+<td>最后修改人</td>
+</tr>
+<tr>
+<td>update_date</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>最后修改时间</td>
+</tr>
+</tbody>
+</table>
+<p><strong>命名规范</strong>：
+- 表名：<code>traj_</code> 前缀 + 业务实体名（snake_case）
+- 字段名：snake_case，布尔标志位用 <code>smallint</code>（0/1）而非 <code>boolean</code>，兼容历史数据
+- 索引名：<code>idx_表名_字段名</code> 或 <code>uk_表名_字段名</code>（唯一索引）
+- 外键：不建立物理外键约束，通过应用层校验关联完整性（遵循系统统一规范）</p>
+<hr />
+<h2 id="3">3. 表设计详情</h2>
+<h3 id="31-traj_gps_point">3.1 traj_gps_point</h3>
+<ul>
+<li><strong>中文名</strong>：轨迹点表</li>
+<li><strong>用途</strong>：存储车辆/人员的 GPS 轨迹点，是轨迹回放、查询、大屏可视化的核心数据源</li>
+<li><strong>行量级</strong>：百万级（5辆车×8小时×1Hz≈14.4万/日，演示场景；生产可达千万级/日）</li>
+<li><strong>增长率</strong>：每日 14.4 万行（演示场景）</li>
+</ul>
+<h4 id="_1">字段定义</h4>
+<table>
+<thead>
+<tr>
+<th>列名</th>
+<th>类型</th>
+<th>可空</th>
+<th>默认</th>
+<th>注释（业务含义）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>bigserial</td>
+<td>否</td>
+<td>—</td>
+<td>主键</td>
+</tr>
+<tr>
+<td>identity_code</td>
+<td>varchar(100)</td>
+<td>否</td>
+<td>—</td>
+<td>设备身份标识（终端识别码）</td>
+</tr>
+<tr>
+<td>plate_no</td>
+<td>varchar(50)</td>
+<td>是</td>
+<td>NULL</td>
+<td>车牌号（冗余字段，便于直接查询）</td>
+</tr>
+<tr>
+<td>gps_time</td>
+<td>timestamp</td>
+<td>否</td>
+<td>—</td>
+<td>GPS 定位时间（终端上报时间）</td>
+</tr>
+<tr>
+<td>lng</td>
+<td>numeric(10,6)</td>
+<td>否</td>
+<td>—</td>
+<td>经度（WGS84 坐标系）</td>
+</tr>
+<tr>
+<td>lat</td>
+<td>numeric(10,6)</td>
+<td>否</td>
+<td>—</td>
+<td>纬度（WGS84 坐标系）</td>
+</tr>
+<tr>
+<td>speed</td>
+<td>integer</td>
+<td>是</td>
+<td>NULL</td>
+<td>速度（km/h）</td>
+</tr>
+<tr>
+<td>direction</td>
+<td>integer</td>
+<td>是</td>
+<td>NULL</td>
+<td>方向角（0-359，正北为 0，顺时针）</td>
+</tr>
+<tr>
+<td>altitude</td>
+<td>integer</td>
+<td>是</td>
+<td>NULL</td>
+<td>海拔（米）</td>
+</tr>
+<tr>
+<td>location</td>
+<td>geometry(Point,4326)</td>
+<td>否</td>
+<td>—</td>
+<td>PostGIS 几何点（lng/lat 组合，用于空间查询）</td>
+</tr>
+<tr>
+<td>alarm_flag</td>
+<td>smallint</td>
+<td>否</td>
+<td>0</td>
+<td>报警标志：0=正常，1=报警</td>
+</tr>
+<tr>
+<td>mileage</td>
+<td>numeric(12,2)</td>
+<td>是</td>
+<td>NULL</td>
+<td>累计里程（km）</td>
+</tr>
+<tr>
+<td>receive_time</td>
+<td>timestamp</td>
+<td>否</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>服务器接收时间</td>
+</tr>
+<tr>
+<td>create_date</td>
+<td>timestamp</td>
+<td>否</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>记录创建时间</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_2">索引</h4>
+<table>
+<thead>
+<tr>
+<th>索引名</th>
+<th>类型</th>
+<th>字段</th>
+<th>命中场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pk_traj_gps_point</td>
+<td>主键</td>
+<td>id</td>
+<td>单点详情</td>
+</tr>
+<tr>
+<td>idx_traj_gps_point_identity_time</td>
+<td>复合B树</td>
+<td>identity_code, gps_time DESC</td>
+<td>按设备+时间范围查询轨迹（最高频）</td>
+</tr>
+<tr>
+<td>idx_traj_gps_point_plate_time</td>
+<td>复合B树</td>
+<td>plate_no, gps_time DESC</td>
+<td>按车牌+时间范围查询</td>
+</tr>
+<tr>
+<td>idx_traj_gps_point_time</td>
+<td>B树</td>
+<td>gps_time DESC</td>
+<td>大屏实时最新位置、时间范围统计</td>
+</tr>
+<tr>
+<td>idx_traj_gps_point_location</td>
+<td>GIST空间</td>
+<td>location</td>
+<td>空间范围查询（地图视野内车辆）</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ddl">DDL</h4>
+<pre><code class="language-sql">-- 启用 PostGIS 扩展（数据库级执行一次）
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+CREATE TABLE IF NOT EXISTS traj_gps_point (
+    id           bigserial       PRIMARY KEY,
+    identity_code varchar(100)   NOT NULL,
+    plate_no     varchar(50),
+    gps_time     timestamp       NOT NULL,
+    lng          numeric(10,6)   NOT NULL,
+    lat          numeric(10,6)   NOT NULL,
+    speed        integer,
+    direction    integer,
+    altitude     integer,
+    location     geometry(Point, 4326) NOT NULL,
+    alarm_flag   smallint        NOT NULL DEFAULT 0,
+    mileage      numeric(12,2),
+    receive_time timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    create_date  timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE  traj_gps_point IS '轨迹点表';
+COMMENT ON COLUMN traj_gps_point.identity_code IS '设备身份标识（终端识别码）';
+COMMENT ON COLUMN traj_gps_point.plate_no      IS '车牌号（冗余字段，便于直接查询）';
+COMMENT ON COLUMN traj_gps_point.gps_time      IS 'GPS 定位时间';
+COMMENT ON COLUMN traj_gps_point.lng           IS '经度 WGS84';
+COMMENT ON COLUMN traj_gps_point.lat           IS '纬度 WGS84';
+COMMENT ON COLUMN traj_gps_point.speed         IS '速度 km/h';
+COMMENT ON COLUMN traj_gps_point.direction     IS '方向角 0-359 正北为0';
+COMMENT ON COLUMN traj_gps_point.altitude      IS '海拔 米';
+COMMENT ON COLUMN traj_gps_point.location      IS 'PostGIS 几何点 SRID=4326';
+COMMENT ON COLUMN traj_gps_point.alarm_flag    IS '报警标志 0=正常 1=报警';
+COMMENT ON COLUMN traj_gps_point.mileage       IS '累计里程 km';
+COMMENT ON COLUMN traj_gps_point.receive_time  IS '服务器接收时间';
+
+CREATE INDEX idx_traj_gps_point_identity_time
+    ON traj_gps_point (identity_code, gps_time DESC);
+CREATE INDEX idx_traj_gps_point_plate_time
+    ON traj_gps_point (plate_no, gps_time DESC);
+CREATE INDEX idx_traj_gps_point_time
+    ON traj_gps_point (gps_time DESC);
+CREATE INDEX idx_traj_gps_point_location
+    ON traj_gps_point USING GIST (location);
+</code></pre>
+<h4 id="_3">软删与唯一约束</h4>
+<p>本表不使用软删除（轨迹点为时序数据，只追加不修改）。唯一性由 <code>identity_code + gps_time</code> 业务保证，但不建立唯一索引（允许同一时刻多源数据）。</p>
+<h4 id="_4">关联关系</h4>
+<table>
+<thead>
+<tr>
+<th>关联表</th>
+<th>关联字段</th>
+<th>关系类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>traj_terminal</td>
+<td>identity_code → identity_code</td>
+<td>多对一</td>
+<td>多个轨迹点归属一个终端</td>
+</tr>
+<tr>
+<td>traj_vehicle</td>
+<td>plate_no → vehicle_no</td>
+<td>多对一</td>
+<td>多个轨迹点归属一辆车</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_5">读写规则</h4>
+<ul>
+<li><strong>写入方</strong>：TRAJ 模块的 <code>TrajIngestService</code>（模拟器推送/批量导入）、<code>TrajSimulatorService</code>（模拟器实时生成）</li>
+<li><strong>读取方</strong>：<code>TrajQueryService</code>（查询）、<code>TrajReplayService</code>（回放）、<code>TrajDashboardService</code>（大屏聚合）、<code>TrajMetricsService</code>（指标计算）</li>
+<li><strong>并发控制</strong>：纯追加写入，无更新冲突；查询走时间范围+空间索引</li>
+<li><strong>归档策略</strong>：演示场景不归档；生产建议按月分区（<code>PARTITION BY RANGE (gps_time)</code>），保留 6 个月热数据</li>
+</ul>
+<hr />
+<h3 id="32-traj_vehicle">3.2 traj_vehicle</h3>
+<ul>
+<li><strong>中文名</strong>：车辆基础信息表</li>
+<li><strong>用途</strong>：车辆台账，记录车牌、VIN、所属组织、运营状态等基础信息</li>
+<li><strong>行量级</strong>：千级</li>
+<li><strong>增长率</strong>：低频更新，日均新增 &lt;10</li>
+</ul>
+<h4 id="_6">字段定义</h4>
+<table>
+<thead>
+<tr>
+<th>列名</th>
+<th>类型</th>
+<th>可空</th>
+<th>默认</th>
+<th>注释（业务含义）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>bigserial</td>
+<td>否</td>
+<td>—</td>
+<td>车辆ID</td>
+</tr>
+<tr>
+<td>dept_id</td>
+<td>bigint</td>
+<td>是</td>
+<td>NULL</td>
+<td>所属组织ID</td>
+</tr>
+<tr>
+<td>vehicle_no</td>
+<td>varchar(40)</td>
+<td>否</td>
+<td>—</td>
+<td>车牌号</td>
+</tr>
+<tr>
+<td>vehicle_plate_color</td>
+<td>varchar(10)</td>
+<td>否</td>
+<td>—</td>
+<td>车牌颜色</td>
+</tr>
+<tr>
+<td>vin</td>
+<td>varchar(40)</td>
+<td>是</td>
+<td>NULL</td>
+<td>车架号</td>
+</tr>
+<tr>
+<td>vehicle_type</td>
+<td>varchar(40)</td>
+<td>是</td>
+<td>NULL</td>
+<td>车辆类型</td>
+</tr>
+<tr>
+<td>operation_type</td>
+<td>smallint</td>
+<td>是</td>
+<td>1</td>
+<td>运营状态：0=非运营，1=运营</td>
+</tr>
+<tr>
+<td>vehicle_industry</td>
+<td>varchar(40)</td>
+<td>是</td>
+<td>NULL</td>
+<td>运输行业类别</td>
+</tr>
+<tr>
+<td>road_license_no</td>
+<td>varchar(64)</td>
+<td>是</td>
+<td>NULL</td>
+<td>道路运输证号</td>
+</tr>
+<tr>
+<td>province_code</td>
+<td>varchar(16)</td>
+<td>是</td>
+<td>NULL</td>
+<td>省区域编码</td>
+</tr>
+<tr>
+<td>city_code</td>
+<td>varchar(16)</td>
+<td>是</td>
+<td>NULL</td>
+<td>市区域编码</td>
+</tr>
+<tr>
+<td>county_code</td>
+<td>varchar(16)</td>
+<td>是</td>
+<td>NULL</td>
+<td>县区域编码</td>
+</tr>
+<tr>
+<td>vehicle_color</td>
+<td>varchar(10)</td>
+<td>是</td>
+<td>NULL</td>
+<td>车身颜色</td>
+</tr>
+<tr>
+<td>vehicle_brand</td>
+<td>varchar(20)</td>
+<td>是</td>
+<td>NULL</td>
+<td>车辆品牌</td>
+</tr>
+<tr>
+<td>owner_name</td>
+<td>varchar(20)</td>
+<td>是</td>
+<td>NULL</td>
+<td>业户姓名</td>
+</tr>
+<tr>
+<td>owner_phone</td>
+<td>varchar(30)</td>
+<td>是</td>
+<td>NULL</td>
+<td>业户电话</td>
+</tr>
+<tr>
+<td>remark</td>
+<td>varchar(100)</td>
+<td>是</td>
+<td>NULL</td>
+<td>备注</td>
+</tr>
+<tr>
+<td>valid_mark</td>
+<td>smallint</td>
+<td>否</td>
+<td>1</td>
+<td>有效标志</td>
+</tr>
+<tr>
+<td>creator</td>
+<td>varchar(40)</td>
+<td>否</td>
+<td>—</td>
+<td>创建人</td>
+</tr>
+<tr>
+<td>create_date</td>
+<td>timestamp</td>
+<td>否</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>创建时间</td>
+</tr>
+<tr>
+<td>updater</td>
+<td>varchar(40)</td>
+<td>是</td>
+<td>NULL</td>
+<td>修改人</td>
+</tr>
+<tr>
+<td>update_date</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>修改时间</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>说明：原 <code>tb_vehicle</code> 表含 40+ 字段（含年审、保险、报废等业务字段），本表精简保留演示所需核心字段。完整字段可在后续迭代中通过 <code>ALTER TABLE ADD COLUMN</code> 扩展。</p>
+</blockquote>
+<h4 id="_7">索引</h4>
+<table>
+<thead>
+<tr>
+<th>索引名</th>
+<th>类型</th>
+<th>字段</th>
+<th>命中场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pk_traj_vehicle</td>
+<td>主键</td>
+<td>id</td>
+<td>单车详情</td>
+</tr>
+<tr>
+<td>idx_traj_vehicle_dept</td>
+<td>B树</td>
+<td>dept_id</td>
+<td>按组织查询车辆</td>
+</tr>
+<tr>
+<td>uk_traj_vehicle_no_color</td>
+<td>唯一</td>
+<td>vehicle_no, vehicle_plate_color</td>
+<td>车牌+颜色唯一</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ddl_1">DDL</h4>
+<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS traj_vehicle (
+    id                   bigserial     PRIMARY KEY,
+    dept_id              bigint,
+    vehicle_no           varchar(40)   NOT NULL,
+    vehicle_plate_color  varchar(10)   NOT NULL,
+    vin                  varchar(40),
+    vehicle_type         varchar(40),
+    operation_type       smallint      DEFAULT 1,
+    vehicle_industry     varchar(40),
+    road_license_no      varchar(64),
+    province_code        varchar(16),
+    city_code            varchar(16),
+    county_code          varchar(16),
+    vehicle_color        varchar(10),
+    vehicle_brand        varchar(20),
+    owner_name           varchar(20),
+    owner_phone          varchar(30),
+    remark               varchar(100),
+    valid_mark           smallint      NOT NULL DEFAULT 1,
+    creator              varchar(40)   NOT NULL,
+    create_date          timestamp     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater              varchar(40),
+    update_date          timestamp
+);
+
+COMMENT ON TABLE traj_vehicle IS '车辆基础信息表';
+
+CREATE INDEX idx_traj_vehicle_dept ON traj_vehicle (dept_id);
+CREATE UNIQUE INDEX uk_traj_vehicle_no_color
+    ON traj_vehicle (vehicle_no, vehicle_plate_color) WHERE valid_mark = 1;
+</code></pre>
+<h4 id="_8">软删与唯一约束</h4>
+<p><code>valid_mark=1</code> 时车牌+颜色唯一；软删除后允许重新注册相同车牌。使用部分唯一索引 <code>WHERE valid_mark = 1</code> 实现。</p>
+<h4 id="_9">关联关系</h4>
+<table>
+<thead>
+<tr>
+<th>关联表</th>
+<th>关联字段</th>
+<th>关系类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>traj_vehicle_terminal</td>
+<td>id ← vehicle_id</td>
+<td>一对多</td>
+<td>一辆车可绑定多个终端</td>
+</tr>
+<tr>
+<td>traj_vehicle_driver</td>
+<td>id ← vehicle_id</td>
+<td>一对多</td>
+<td>一辆车可绑定多个驾驶员</td>
+</tr>
+<tr>
+<td>traj_gps_point</td>
+<td>vehicle_no ← plate_no</td>
+<td>一对多</td>
+<td>一辆车产生多条轨迹点</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_10">读写规则</h4>
+<ul>
+<li><strong>写入方</strong>：IAM 模块的管理员操作、TRAJ 模块的种子数据初始化</li>
+<li><strong>读取方</strong>：TRAJ 模块查询/回放/大屏展示</li>
+<li><strong>并发控制</strong>：乐观锁（<code>update_date</code> 比对）</li>
+<li><strong>归档策略</strong>：不归档，软删除保留</li>
+</ul>
+<hr />
+<h3 id="33-traj_terminal">3.3 traj_terminal</h3>
+<ul>
+<li><strong>中文名</strong>：终端信息表</li>
+<li><strong>用途</strong>：北斗终端设备台账，记录设备号、协议、SIM卡等</li>
+<li><strong>行量级</strong>：千级</li>
+<li><strong>增长率</strong>：低频更新</li>
+</ul>
+<h4 id="_11">字段定义</h4>
+<table>
+<thead>
+<tr>
+<th>列名</th>
+<th>类型</th>
+<th>可空</th>
+<th>默认</th>
+<th>注释（业务含义）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>bigserial</td>
+<td>否</td>
+<td>—</td>
+<td>终端ID</td>
+</tr>
+<tr>
+<td>identity_code</td>
+<td>varchar(100)</td>
+<td>否</td>
+<td>—</td>
+<td>设备身份标识（终端识别码，全局唯一）</td>
+</tr>
+<tr>
+<td>tl_mac</td>
+<td>varchar(16)</td>
+<td>是</td>
+<td>NULL</td>
+<td>终端MAC地址</td>
+</tr>
+<tr>
+<td>oem_code</td>
+<td>varchar(40)</td>
+<td>是</td>
+<td>NULL</td>
+<td>终端厂商编码</td>
+</tr>
+<tr>
+<td>tl_model</td>
+<td>varchar(64)</td>
+<td>是</td>
+<td>NULL</td>
+<td>终端型号</td>
+</tr>
+<tr>
+<td>sim_account</td>
+<td>varchar(32)</td>
+<td>是</td>
+<td>NULL</td>
+<td>SIM卡号</td>
+</tr>
+<tr>
+<td>protocol_type</td>
+<td>varchar(8)</td>
+<td>是</td>
+<td>NULL</td>
+<td>终端协议类型</td>
+</tr>
+<tr>
+<td>equipment_type</td>
+<td>varchar(8)</td>
+<td>是</td>
+<td>NULL</td>
+<td>设备类型：2=2G部标，4=1078视频</td>
+</tr>
+<tr>
+<td>video_channel</td>
+<td>smallint</td>
+<td>是</td>
+<td>NULL</td>
+<td>视频通道数（0=无视频）</td>
+</tr>
+<tr>
+<td>status</td>
+<td>smallint</td>
+<td>否</td>
+<td>1</td>
+<td>状态：1=有效，0=失效</td>
+</tr>
+<tr>
+<td>remark</td>
+<td>varchar(100)</td>
+<td>是</td>
+<td>NULL</td>
+<td>备注</td>
+</tr>
+<tr>
+<td>valid_mark</td>
+<td>smallint</td>
+<td>否</td>
+<td>1</td>
+<td>有效标志</td>
+</tr>
+<tr>
+<td>creator</td>
+<td>varchar(40)</td>
+<td>否</td>
+<td>—</td>
+<td>创建人</td>
+</tr>
+<tr>
+<td>create_date</td>
+<td>timestamp</td>
+<td>否</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>创建时间</td>
+</tr>
+<tr>
+<td>updater</td>
+<td>varchar(40)</td>
+<td>是</td>
+<td>NULL</td>
+<td>修改人</td>
+</tr>
+<tr>
+<td>update_date</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>修改时间</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ddl_2">DDL</h4>
+<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS traj_terminal (
+    id             bigserial     PRIMARY KEY,
+    identity_code  varchar(100)  NOT NULL,
+    tl_mac         varchar(16),
+    oem_code       varchar(40),
+    tl_model       varchar(64),
+    sim_account    varchar(32),
+    protocol_type  varchar(8),
+    equipment_type varchar(8),
+    video_channel  smallint,
+    status         smallint      NOT NULL DEFAULT 1,
+    remark         varchar(100),
+    valid_mark     smallint      NOT NULL DEFAULT 1,
+    creator        varchar(40)   NOT NULL,
+    create_date    timestamp     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater        varchar(40),
+    update_date    timestamp
+);
+
+COMMENT ON TABLE traj_terminal IS '终端信息表';
+COMMENT ON COLUMN traj_terminal.identity_code IS '设备身份标识 全局唯一';
+
+CREATE UNIQUE INDEX uk_traj_terminal_identity
+    ON traj_terminal (identity_code) WHERE valid_mark = 1;
+</code></pre>
+<h4 id="_12">关联关系</h4>
+<table>
+<thead>
+<tr>
+<th>关联表</th>
+<th>关联字段</th>
+<th>关系类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>traj_vehicle_terminal</td>
+<td>id ← terminal_id</td>
+<td>一对多</td>
+<td>一个终端可绑定多辆车（历史）</td>
+</tr>
+<tr>
+<td>traj_gps_point</td>
+<td>identity_code ← identity_code</td>
+<td>一对多</td>
+<td>一个终端产生多条轨迹点</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="34-traj_driver">3.4 traj_driver</h3>
+<ul>
+<li><strong>中文名</strong>：驾驶员信息表</li>
+<li><strong>用途</strong>：驾驶员档案，记录姓名、身份证、从业资格证等</li>
+<li><strong>行量级</strong>：千级</li>
+<li><strong>增长率</strong>：低频更新</li>
+</ul>
+<h4 id="_13">字段定义</h4>
+<table>
+<thead>
+<tr>
+<th>列名</th>
+<th>类型</th>
+<th>可空</th>
+<th>默认</th>
+<th>注释（业务含义）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>bigserial</td>
+<td>否</td>
+<td>—</td>
+<td>驾驶员ID</td>
+</tr>
+<tr>
+<td>driver_name</td>
+<td>varchar(40)</td>
+<td>否</td>
+<td>—</td>
+<td>驾驶员姓名</td>
+</tr>
+<tr>
+<td>sex</td>
+<td>smallint</td>
+<td>否</td>
+<td>1</td>
+<td>性别：1=男，2=女</td>
+</tr>
+<tr>
+<td>idcard</td>
+<td>varchar(30)</td>
+<td>是</td>
+<td>NULL</td>
+<td>身份证号（脱敏存储）</td>
+</tr>
+<tr>
+<td>contact_phone</td>
+<td>varchar(30)</td>
+<td>是</td>
+<td>NULL</td>
+<td>联系电话（脱敏存储）</td>
+</tr>
+<tr>
+<td>license_code</td>
+<td>varchar(40)</td>
+<td>否</td>
+<td>—</td>
+<td>从业资格证号</td>
+</tr>
+<tr>
+<td>licence_category</td>
+<td>varchar(32)</td>
+<td>是</td>
+<td>NULL</td>
+<td>从业资格证类别</td>
+</tr>
+<tr>
+<td>driver_img</td>
+<td>varchar(128)</td>
+<td>是</td>
+<td>NULL</td>
+<td>驾驶员照片URL</td>
+</tr>
+<tr>
+<td>status</td>
+<td>smallint</td>
+<td>否</td>
+<td>1</td>
+<td>状态：1=有效，0=失效</td>
+</tr>
+<tr>
+<td>remark</td>
+<td>varchar(100)</td>
+<td>是</td>
+<td>NULL</td>
+<td>备注</td>
+</tr>
+<tr>
+<td>valid_mark</td>
+<td>smallint</td>
+<td>否</td>
+<td>1</td>
+<td>有效标志</td>
+</tr>
+<tr>
+<td>creator</td>
+<td>varchar(40)</td>
+<td>否</td>
+<td>—</td>
+<td>创建人</td>
+</tr>
+<tr>
+<td>create_date</td>
+<td>timestamp</td>
+<td>否</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>创建时间</td>
+</tr>
+<tr>
+<td>updater</td>
+<td>varchar(40)</td>
+<td>是</td>
+<td>NULL</td>
+<td>修改人</td>
+</tr>
+<tr>
+<td>update_date</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>修改时间</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ddl_3">DDL</h4>
+<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS traj_driver (
+    id                  bigserial    PRIMARY KEY,
+    driver_name         varchar(40)  NOT NULL,
+    sex                 smallint     NOT NULL DEFAULT 1,
+    idcard              varchar(30),
+    contact_phone       varchar(30),
+    license_code        varchar(40)  NOT NULL,
+    licence_category    varchar(32),
+    driver_img          varchar(128),
+    status              smallint     NOT NULL DEFAULT 1,
+    remark              varchar(100),
+    valid_mark          smallint     NOT NULL DEFAULT 1,
+    creator             varchar(40)  NOT NULL,
+    create_date         timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater             varchar(40),
+    update_date         timestamp
+);
+
+COMMENT ON TABLE traj_driver IS '驾驶员信息表';
+COMMENT ON COLUMN traj_driver.idcard IS '身份证号 脱敏存储';
+COMMENT ON COLUMN traj_driver.contact_phone IS '联系电话 脱敏存储';
+
+CREATE UNIQUE INDEX uk_traj_driver_license
+    ON traj_driver (license_code) WHERE valid_mark = 1;
+</code></pre>
+<h4 id="_14">安全说明</h4>
+<p><code>idcard</code> 和 <code>contact_phone</code> 字段在写入前由 PROC 模块的脱敏引擎处理，存储脱敏后的值（如 <code>110101********1234</code>）。详见 MOD-PROC-001 §脱敏引擎。</p>
+<hr />
+<h3 id="35-traj_vehicle_driver">3.5 traj_vehicle_driver</h3>
+<ul>
+<li><strong>中文名</strong>：车辆-司机关联表</li>
+<li><strong>用途</strong>：记录车辆与驾驶员的绑定关系（多对多），含主驾/副驾区分</li>
+<li><strong>行量级</strong>：千级</li>
+<li><strong>增长率</strong>：低频更新</li>
+</ul>
+<h4 id="_15">字段定义</h4>
+<table>
+<thead>
+<tr>
+<th>列名</th>
+<th>类型</th>
+<th>可空</th>
+<th>默认</th>
+<th>注释（业务含义）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>bigserial</td>
+<td>否</td>
+<td>—</td>
+<td>主键ID</td>
+</tr>
+<tr>
+<td>vehicle_id</td>
+<td>bigint</td>
+<td>否</td>
+<td>—</td>
+<td>车辆ID</td>
+</tr>
+<tr>
+<td>driver_id</td>
+<td>bigint</td>
+<td>否</td>
+<td>—</td>
+<td>驾驶员ID</td>
+</tr>
+<tr>
+<td>driver_type</td>
+<td>smallint</td>
+<td>是</td>
+<td>1</td>
+<td>司机类型：1=主驾，2=副驾</td>
+</tr>
+<tr>
+<td>bind_time</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>绑定时间</td>
+</tr>
+<tr>
+<td>unbind_time</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>解绑时间</td>
+</tr>
+<tr>
+<td>status</td>
+<td>smallint</td>
+<td>否</td>
+<td>1</td>
+<td>状态：1=绑定生效，0=已解绑</td>
+</tr>
+<tr>
+<td>remark</td>
+<td>varchar(100)</td>
+<td>是</td>
+<td>NULL</td>
+<td>备注</td>
+</tr>
+<tr>
+<td>valid_mark</td>
+<td>smallint</td>
+<td>否</td>
+<td>1</td>
+<td>有效标志</td>
+</tr>
+<tr>
+<td>creator</td>
+<td>varchar(40)</td>
+<td>否</td>
+<td>—</td>
+<td>创建人</td>
+</tr>
+<tr>
+<td>create_date</td>
+<td>timestamp</td>
+<td>否</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>创建时间</td>
+</tr>
+<tr>
+<td>updater</td>
+<td>varchar(40)</td>
+<td>是</td>
+<td>NULL</td>
+<td>修改人</td>
+</tr>
+<tr>
+<td>update_date</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>修改时间</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ddl_4">DDL</h4>
+<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS traj_vehicle_driver (
+    id          bigserial    PRIMARY KEY,
+    vehicle_id  bigint       NOT NULL,
+    driver_id   bigint       NOT NULL,
+    driver_type smallint     DEFAULT 1,
+    bind_time   timestamp,
+    unbind_time timestamp,
+    status      smallint     NOT NULL DEFAULT 1,
+    remark      varchar(100),
+    valid_mark  smallint     NOT NULL DEFAULT 1,
+    creator     varchar(40)  NOT NULL,
+    create_date timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater     varchar(40),
+    update_date timestamp
+);
+
+COMMENT ON TABLE traj_vehicle_driver IS '车辆-司机关联表';
+
+CREATE INDEX idx_traj_vd_vehicle ON traj_vehicle_driver (vehicle_id);
+CREATE INDEX idx_traj_vd_driver  ON traj_vehicle_driver (driver_id);
+CREATE UNIQUE INDEX uk_traj_vd_vehicle_driver
+    ON traj_vehicle_driver (vehicle_id, driver_id) WHERE valid_mark = 1;
+</code></pre>
+<hr />
+<h3 id="36-traj_vehicle_terminal">3.6 traj_vehicle_terminal</h3>
+<ul>
+<li><strong>中文名</strong>：车辆-终端关联表</li>
+<li><strong>用途</strong>：记录车辆与终端的绑定关系（多对多），含主终端/备用终端区分</li>
+<li><strong>行量级</strong>：千级</li>
+<li><strong>增长率</strong>：低频更新</li>
+</ul>
+<h4 id="_16">字段定义</h4>
+<table>
+<thead>
+<tr>
+<th>列名</th>
+<th>类型</th>
+<th>可空</th>
+<th>默认</th>
+<th>注释（业务含义）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>bigserial</td>
+<td>否</td>
+<td>—</td>
+<td>主键ID</td>
+</tr>
+<tr>
+<td>vehicle_id</td>
+<td>bigint</td>
+<td>否</td>
+<td>—</td>
+<td>车辆ID</td>
+</tr>
+<tr>
+<td>terminal_id</td>
+<td>bigint</td>
+<td>否</td>
+<td>—</td>
+<td>终端ID</td>
+</tr>
+<tr>
+<td>bind_type</td>
+<td>smallint</td>
+<td>否</td>
+<td>1</td>
+<td>绑定类型：1=主终端，2=备用终端</td>
+</tr>
+<tr>
+<td>bind_time</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>绑定时间</td>
+</tr>
+<tr>
+<td>install_time</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>安装时间</td>
+</tr>
+<tr>
+<td>installer</td>
+<td>varchar(40)</td>
+<td>是</td>
+<td>NULL</td>
+<td>安装人员</td>
+</tr>
+<tr>
+<td>unbind_time</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>解绑时间</td>
+</tr>
+<tr>
+<td>status</td>
+<td>smallint</td>
+<td>否</td>
+<td>1</td>
+<td>状态：1=绑定生效，0=已解绑</td>
+</tr>
+<tr>
+<td>remark</td>
+<td>varchar(255)</td>
+<td>是</td>
+<td>NULL</td>
+<td>备注</td>
+</tr>
+<tr>
+<td>valid_mark</td>
+<td>smallint</td>
+<td>否</td>
+<td>1</td>
+<td>有效标志</td>
+</tr>
+<tr>
+<td>creator</td>
+<td>varchar(40)</td>
+<td>否</td>
+<td>—</td>
+<td>创建人</td>
+</tr>
+<tr>
+<td>create_date</td>
+<td>timestamp</td>
+<td>否</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>创建时间</td>
+</tr>
+<tr>
+<td>updater</td>
+<td>varchar(40)</td>
+<td>是</td>
+<td>NULL</td>
+<td>修改人</td>
+</tr>
+<tr>
+<td>update_date</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>修改时间</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ddl_5">DDL</h4>
+<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS traj_vehicle_terminal (
+    id           bigserial    PRIMARY KEY,
+    vehicle_id   bigint       NOT NULL,
+    terminal_id  bigint       NOT NULL,
+    bind_type    smallint     NOT NULL DEFAULT 1,
+    bind_time    timestamp,
+    install_time timestamp,
+    installer    varchar(40),
+    unbind_time  timestamp,
+    status       smallint     NOT NULL DEFAULT 1,
+    remark       varchar(255),
+    valid_mark   smallint     NOT NULL DEFAULT 1,
+    creator      varchar(40)  NOT NULL,
+    create_date  timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater      varchar(40),
+    update_date  timestamp
+);
+
+COMMENT ON TABLE traj_vehicle_terminal IS '车辆-终端关联表';
+
+CREATE INDEX idx_traj_vt_vehicle  ON traj_vehicle_terminal (vehicle_id);
+CREATE INDEX idx_traj_vt_terminal ON traj_vehicle_terminal (terminal_id);
+</code></pre>
+<hr />
+<h3 id="37-traj_warn_info">3.7 traj_warn_info</h3>
+<ul>
+<li><strong>中文名</strong>：报警信息表</li>
+<li><strong>用途</strong>：存储终端上报的报警事件（超速、疲劳驾驶、围栏越界等）</li>
+<li><strong>行量级</strong>：万级/日</li>
+<li><strong>增长率</strong>：日均 1万行（演示场景）</li>
+</ul>
+<h4 id="_17">字段定义</h4>
+<table>
+<thead>
+<tr>
+<th>列名</th>
+<th>类型</th>
+<th>可空</th>
+<th>默认</th>
+<th>注释（业务含义）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>bigserial</td>
+<td>否</td>
+<td>—</td>
+<td>主键</td>
+</tr>
+<tr>
+<td>source_id</td>
+<td>varchar(50)</td>
+<td>否</td>
+<td>—</td>
+<td>报警来源ID</td>
+</tr>
+<tr>
+<td>plate_no</td>
+<td>varchar(50)</td>
+<td>否</td>
+<td>—</td>
+<td>车牌号</td>
+</tr>
+<tr>
+<td>identity_code</td>
+<td>varchar(100)</td>
+<td>是</td>
+<td>NULL</td>
+<td>设备身份标识</td>
+</tr>
+<tr>
+<td>start_warn_time</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>报警开始时间</td>
+</tr>
+<tr>
+<td>end_warn_time</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>报警结束时间</td>
+</tr>
+<tr>
+<td>start_gps_time</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>GPS定位开始时间</td>
+</tr>
+<tr>
+<td>end_gps_time</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>GPS定位结束时间</td>
+</tr>
+<tr>
+<td>start_lng</td>
+<td>varchar(50)</td>
+<td>是</td>
+<td>NULL</td>
+<td>报警开始经度</td>
+</tr>
+<tr>
+<td>start_lat</td>
+<td>varchar(50)</td>
+<td>是</td>
+<td>NULL</td>
+<td>报警开始纬度</td>
+</tr>
+<tr>
+<td>end_lng</td>
+<td>varchar(50)</td>
+<td>是</td>
+<td>NULL</td>
+<td>报警结束经度</td>
+</tr>
+<tr>
+<td>end_lat</td>
+<td>varchar(50)</td>
+<td>是</td>
+<td>NULL</td>
+<td>报警结束纬度</td>
+</tr>
+<tr>
+<td>start_speed</td>
+<td>integer</td>
+<td>是</td>
+<td>NULL</td>
+<td>报警开始速度 km/h</td>
+</tr>
+<tr>
+<td>end_speed</td>
+<td>integer</td>
+<td>是</td>
+<td>NULL</td>
+<td>报警结束速度</td>
+</tr>
+<tr>
+<td>type_id</td>
+<td>integer</td>
+<td>否</td>
+<td>—</td>
+<td>报警类型ID</td>
+</tr>
+<tr>
+<td>warn_continue_mark</td>
+<td>smallint</td>
+<td>是</td>
+<td>NULL</td>
+<td>警报持续标志：0=停止，1=持续</td>
+</tr>
+<tr>
+<td>rule_id</td>
+<td>bigint</td>
+<td>否</td>
+<td>—</td>
+<td>规则ID</td>
+</tr>
+<tr>
+<td>handle_status</td>
+<td>smallint</td>
+<td>是</td>
+<td>NULL</td>
+<td>处理标志：0=未处理，1=已处理</td>
+</tr>
+<tr>
+<td>handle_result_code</td>
+<td>varchar(2)</td>
+<td>是</td>
+<td>NULL</td>
+<td>处理结果：00=属实，01=误报，02=未知</td>
+</tr>
+<tr>
+<td>handle_result_msg</td>
+<td>varchar(200)</td>
+<td>是</td>
+<td>NULL</td>
+<td>处理结果说明</td>
+</tr>
+<tr>
+<td>handler</td>
+<td>varchar(30)</td>
+<td>是</td>
+<td>NULL</td>
+<td>处理人</td>
+</tr>
+<tr>
+<td>creator</td>
+<td>varchar(30)</td>
+<td>是</td>
+<td>NULL</td>
+<td>创建人</td>
+</tr>
+<tr>
+<td>create_date</td>
+<td>timestamp</td>
+<td>否</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>创建时间</td>
+</tr>
+<tr>
+<td>updater</td>
+<td>varchar(30)</td>
+<td>是</td>
+<td>NULL</td>
+<td>修改人</td>
+</tr>
+<tr>
+<td>update_date</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>修改时间</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ddl_6">DDL</h4>
+<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS traj_warn_info (
+    id                  bigserial    PRIMARY KEY,
+    source_id           varchar(50)  NOT NULL,
+    plate_no            varchar(50)  NOT NULL,
+    identity_code       varchar(100),
+    start_warn_time     timestamp,
+    end_warn_time       timestamp,
+    start_gps_time      timestamp,
+    end_gps_time        timestamp,
+    start_lng           varchar(50),
+    start_lat           varchar(50),
+    end_lng             varchar(50),
+    end_lat             varchar(50),
+    start_speed         integer,
+    end_speed           integer,
+    type_id             integer      NOT NULL,
+    warn_continue_mark  smallint,
+    rule_id             bigint       NOT NULL,
+    handle_status       smallint,
+    handle_result_code  varchar(2),
+    handle_result_msg   varchar(200),
+    handler             varchar(30),
+    creator             varchar(30),
+    create_date         timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater             varchar(30),
+    update_date         timestamp
+);
+
+COMMENT ON TABLE traj_warn_info IS '报警信息表';
+
+CREATE INDEX idx_traj_warn_plate_time ON traj_warn_info (plate_no, start_warn_time DESC);
+CREATE INDEX idx_traj_warn_type       ON traj_warn_info (type_id);
+CREATE INDEX idx_traj_warn_status     ON traj_warn_info (handle_status);
+</code></pre>
+<hr />
+<h3 id="38-traj_gps_photo">3.8 traj_gps_photo</h3>
+<ul>
+<li><strong>中文名</strong>：车辆拍照信息表</li>
+<li><strong>用途</strong>：存储终端抓拍图片的元数据（图片文件存储在 Storage 抽象层）</li>
+<li><strong>行量级</strong>：万级</li>
+<li><strong>增长率</strong>：日均百级</li>
+</ul>
+<h4 id="_18">字段定义</h4>
+<table>
+<thead>
+<tr>
+<th>列名</th>
+<th>类型</th>
+<th>可空</th>
+<th>默认</th>
+<th>注释（业务含义）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>photo_id</td>
+<td>bigserial</td>
+<td>否</td>
+<td>—</td>
+<td>主键ID</td>
+</tr>
+<tr>
+<td>truck_id</td>
+<td>bigint</td>
+<td>是</td>
+<td>NULL</td>
+<td>车辆ID</td>
+</tr>
+<tr>
+<td>identity_code</td>
+<td>varchar(100)</td>
+<td>是</td>
+<td>NULL</td>
+<td>设备号</td>
+</tr>
+<tr>
+<td>channel_id</td>
+<td>integer</td>
+<td>是</td>
+<td>NULL</td>
+<td>通道号</td>
+</tr>
+<tr>
+<td>file_name</td>
+<td>varchar(100)</td>
+<td>是</td>
+<td>NULL</td>
+<td>图片名称</td>
+</tr>
+<tr>
+<td>url</td>
+<td>varchar(255)</td>
+<td>是</td>
+<td>NULL</td>
+<td>图片URL</td>
+</tr>
+<tr>
+<td>photo_size</td>
+<td>integer</td>
+<td>是</td>
+<td>NULL</td>
+<td>图片大小（KB）</td>
+</tr>
+<tr>
+<td>track_id</td>
+<td>varchar(64)</td>
+<td>是</td>
+<td>NULL</td>
+<td>轨迹跟踪ID</td>
+</tr>
+<tr>
+<td>task_id</td>
+<td>varchar(100)</td>
+<td>是</td>
+<td>NULL</td>
+<td>任务ID</td>
+</tr>
+<tr>
+<td>req_source</td>
+<td>varchar(20)</td>
+<td>是</td>
+<td>NULL</td>
+<td>请求来源</td>
+</tr>
+<tr>
+<td>cmd_time</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>指令下发时间</td>
+</tr>
+<tr>
+<td>gps_time</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>GPS时间</td>
+</tr>
+<tr>
+<td>receive_time</td>
+<td>timestamp</td>
+<td>是</td>
+<td>NULL</td>
+<td>报文接收时间</td>
+</tr>
+<tr>
+<td>create_time</td>
+<td>timestamp</td>
+<td>否</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>创建时间</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ddl_7">DDL</h4>
+<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS traj_gps_photo (
+    photo_id      bigserial    PRIMARY KEY,
+    truck_id      bigint,
+    identity_code varchar(100),
+    channel_id    integer,
+    file_name     varchar(100),
+    url           varchar(255),
+    photo_size    integer,
+    track_id      varchar(64),
+    task_id       varchar(100),
+    req_source    varchar(20),
+    cmd_time      timestamp,
+    gps_time      timestamp,
+    receive_time  timestamp,
+    create_time   timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE traj_gps_photo IS '车辆拍照信息表';
+
+CREATE INDEX idx_traj_photo_truck ON traj_gps_photo (truck_id);
+CREATE INDEX idx_traj_photo_file  ON traj_gps_photo (file_name);
+</code></pre>
+<hr />
+<h2 id="4">4. 种子数据</h2>
+<h3 id="41">4.1 车辆与终端绑定数据</h3>
+<p>模拟 5 辆车的种子数据，供模拟器与可视化演示使用：</p>
+<pre><code class="language-sql">-- 车辆数据（5辆）
+INSERT INTO traj_vehicle (id, dept_id, vehicle_no, vehicle_plate_color, vin, vehicle_type, operation_type, vehicle_brand, owner_name, creator)
+VALUES
+(1, 1, '京A12345', '蓝色', 'LSVAM4187C2014001', '重型货车', 1, '解放', '北京物流公司', 'system'),
+(2, 1, '京A23456', '蓝色', 'LSVAM4187C2014002', '中型货车', 1, '东风', '北京物流公司', 'system'),
+(3, 1, '京A34567', '黄色', 'LSVAM4187C2014003', '重型货车', 1, '陕汽', '北京物流公司', 'system'),
+(4, 2, '京B45678', '黄色', 'LSVAM4187C2014004', '轻型货车', 1, '福田', '北京配送中心', 'system'),
+(5, 2, '京B56789', '白色', 'LSVAM4187C2014005', '冷链车',   1, '江铃', '北京配送中心', 'system')
+ON CONFLICT (id) DO NOTHING;
+
+-- 终端数据（5台）
+INSERT INTO traj_terminal (id, identity_code, tl_model, sim_account, protocol_type, equipment_type, video_channel, status, creator)
+VALUES
+(1, 'TERM_001', 'GT06N',  '13800100001', 'JT808', '4', 4, 1, 'system'),
+(2, 'TERM_002', 'GT06N',  '13800100002', 'JT808', '4', 4, 1, 'system'),
+(3, 'TERM_003', 'GT06N',  '13800100003', 'JT808', '4', 4, 1, 'system'),
+(4, 'TERM_004', 'GT06N',  '13800100004', 'JT808', '2', 0, 1, 'system'),
+(5, 'TERM_005', 'GT06N',  '13800100005', 'JT808', '2', 0, 1, 'system')
+ON CONFLICT (id) DO NOTHING;
+
+-- 车辆-终端绑定
+INSERT INTO traj_vehicle_terminal (vehicle_id, terminal_id, bind_type, bind_time, status, creator)
+VALUES
+(1, 1, 1, CURRENT_TIMESTAMP, 1, 'system'),
+(2, 2, 1, CURRENT_TIMESTAMP, 1, 'system'),
+(3, 3, 1, CURRENT_TIMESTAMP, 1, 'system'),
+(4, 4, 1, CURRENT_TIMESTAMP, 1, 'system'),
+(5, 5, 1, CURRENT_TIMESTAMP, 1, 'system')
+ON CONFLICT DO NOTHING;
+
+-- 驾驶员数据（5名）
+INSERT INTO traj_driver (id, driver_name, sex, idcard, contact_phone, license_code, licence_category, status, creator)
+VALUES
+(1, '张伟', 1, '110101********0001', '138****0001', 'LIC001', 'A2', 1, 'system'),
+(2, '李强', 1, '110101********0002', '138****0002', 'LIC002', 'B2', 1, 'system'),
+(3, '王磊', 1, '110101********0003', '138****0003', 'LIC003', 'A2', 1, 'system'),
+(4, '刘洋', 1, '110101********0004', '138****0004', 'LIC004', 'C1', 1, 'system'),
+(5, '陈杰', 1, '110101********0005', '138****0005', 'LIC005', 'B2', 1, 'system')
+ON CONFLICT (id) DO NOTHING;
+
+-- 车辆-司机绑定
+INSERT INTO traj_vehicle_driver (vehicle_id, driver_id, driver_type, bind_time, status, creator)
+VALUES
+(1, 1, 1, CURRENT_TIMESTAMP, 1, 'system'),
+(2, 2, 1, CURRENT_TIMESTAMP, 1, 'system'),
+(3, 3, 1, CURRENT_TIMESTAMP, 1, 'system'),
+(4, 4, 1, CURRENT_TIMESTAMP, 1, 'system'),
+(5, 5, 1, CURRENT_TIMESTAMP, 1, 'system')
+ON CONFLICT DO NOTHING;
+</code></pre>
+<h3 id="42">4.2 报警类型种子</h3>
+<pre><code class="language-sql">INSERT INTO base_warn_type (id, pid, name, grade_level, valid_mark, creator, create_date)
+VALUES
+(1, -1, '超速报警',    1, 1, 'system', CURRENT_TIMESTAMP),
+(2, -1, '疲劳驾驶',    1, 1, 'system', CURRENT_TIMESTAMP),
+(3, -1, '围栏越界',    2, 1, 'system', CURRENT_TIMESTAMP),
+(4, -1, '紧急求助',    1, 1, 'system', CURRENT_TIMESTAMP),
+(5, -1, '设备故障',    3, 1, 'system', CURRENT_TIMESTAMP)
+ON CONFLICT (id) DO NOTHING;
+</code></pre>
+<blockquote>
+<p>注：<code>base_warn_type</code> 与 <code>base_warn_rule</code> 两张报警规则基础表沿用 <code>langdi.sql</code> 原始结构，可保留在 <code>traj</code> schema 或独立 <code>base</code> schema。本设计建议保留在 <code>traj</code> schema，DDL 迁移时同步导入。</p>
+</blockquote>
+<hr />
+<h2 id="5-er">5. ER 片图</h2>
+<pre><code class="language-mermaid">erDiagram
+    traj_vehicle ||--o{ traj_vehicle_terminal : &quot;1:N&quot;
+    traj_terminal ||--o{ traj_vehicle_terminal : &quot;1:N&quot;
+    traj_vehicle ||--o{ traj_vehicle_driver : &quot;1:N&quot;
+    traj_driver  ||--o{ traj_vehicle_driver : &quot;1:N&quot;
+    traj_vehicle ||--o{ traj_gps_point     : &quot;1:N via plate_no&quot;
+    traj_terminal ||--o{ traj_gps_point    : &quot;1:N via identity_code&quot;
+    traj_vehicle ||--o{ traj_warn_info     : &quot;1:N via plate_no&quot;
+    traj_vehicle ||--o{ traj_gps_photo     : &quot;1:N via truck_id&quot;
+    traj_terminal ||--o{ traj_gps_photo    : &quot;1:N via identity_code&quot;
+
+    traj_gps_point {
+        bigint id PK
+        varchar identity_code FK
+        varchar plate_no FK
+        timestamp gps_time
+        numeric lng
+        numeric lat
+        geometry location
+        integer speed
+    }
+    traj_vehicle {
+        bigint id PK
+        varchar vehicle_no
+        varchar vehicle_plate_color
+        bigint dept_id
+    }
+    traj_terminal {
+        bigint id PK
+        varchar identity_code
+        varchar tl_model
+        varchar protocol_type
+    }
+    traj_driver {
+        bigint id PK
+        varchar driver_name
+        varchar license_code
+        varchar idcard
+    }
+    traj_vehicle_driver {
+        bigint id PK
+        bigint vehicle_id FK
+        bigint driver_id FK
+        smallint driver_type
+    }
+    traj_vehicle_terminal {
+        bigint id PK
+        bigint vehicle_id FK
+        bigint terminal_id FK
+        smallint bind_type
+    }
+    traj_warn_info {
+        bigint id PK
+        varchar plate_no
+        integer type_id
+        smallint handle_status
+    }
+    traj_gps_photo {
+        bigint photo_id PK
+        bigint truck_id
+        varchar identity_code
+        varchar url
+    }
+</code></pre>
+<hr />
+<h2 id="6">6. 迁移脚本</h2>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>文件名</th>
+<th>变更内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>V1_0__create_traj_schema.sql</td>
+<td>创建 traj schema + 8 张表 + PostGIS 扩展 + 索引</td>
+</tr>
+<tr>
+<td>v1.1</td>
+<td>V1_1__seed_traj_demo_data.sql</td>
+<td>插入 5 辆车 + 5 个终端 + 5 名驾驶员种子数据</td>
+</tr>
+</tbody>
+</table>
+<h3 id="61">6.1 迁移脚本规范</h3>
+<ul>
+<li>迁移脚本存放目录：<code>backend/src/main/resources/db/migration/</code></li>
+<li>使用 Flyway 管理版本，文件名格式：<code>V{主版本}_{次版本}__{描述}.sql</code></li>
+<li>迁移脚本幂等：使用 <code>CREATE TABLE IF NOT EXISTS</code>、<code>ON CONFLICT DO NOTHING</code></li>
+<li>PostGIS 扩展需在首个迁移脚本顶部启用：<code>CREATE EXTENSION IF NOT EXISTS postgis;</code></li>
+</ul>
+<h3 id="62-langdisql">6.2 从 langdi.sql 迁移适配要点</h3>
+<table>
+<thead>
+<tr>
+<th>原始（MySQL）</th>
+<th>迁移后（PostgreSQL）</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bigint(20) NOT NULL AUTO_INCREMENT</code></td>
+<td><code>bigserial PRIMARY KEY</code></td>
+<td>自增主键</td>
+</tr>
+<tr>
+<td><code>datetime(0)</code></td>
+<td><code>timestamp</code></td>
+<td>时间类型</td>
+</tr>
+<tr>
+<td><code>tinyint(4)</code></td>
+<td><code>smallint</code></td>
+<td>小整数</td>
+</tr>
+<tr>
+<td><code>varchar(N) CHARACTER SET utf8mb4</code></td>
+<td><code>varchar(N)</code></td>
+<td>PostgreSQL 默认 UTF-8</td>
+</tr>
+<tr>
+<td><code>ON UPDATE CURRENT_TIMESTAMP</code></td>
+<td>应用层 <code>@PreUpdate</code> 触发</td>
+<td>PostgreSQL 无此特性</td>
+</tr>
+<tr>
+<td><code>INDEX idx (col) USING BTREE</code></td>
+<td><code>CREATE INDEX idx ON table (col)</code></td>
+<td>索引独立语句</td>
+</tr>
+<tr>
+<td><code>ENGINE=InnoDB</code></td>
+<td>—</td>
+<td>PostgreSQL 无存储引擎概念</td>
+</tr>
+<tr>
+<td><code>tb_vehicle</code> 等表名</td>
+<td><code>traj_vehicle</code></td>
+<td>加 schema 前缀</td>
+</tr>
+<tr>
+<td>坐标 lng/lat 双列</td>
+<td>新增 <code>location geometry(Point,4326)</code></td>
+<td>新增 PostGIS 几何列</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7">7. 验收标准</h2>
+<ul>
+<li>[ ] <code>traj</code> schema 创建成功，8 张表存在</li>
+<li>[ ] PostGIS 扩展已启用，<code>SELECT PostGIS_version();</code> 返回 3.4+</li>
+<li>[ ] <code>traj_gps_point.location</code> 字段类型为 <code>geometry(Point, 4326)</code></li>
+<li>[ ] GIST 空间索引 <code>idx_traj_gps_point_location</code> 存在</li>
+<li>[ ] 种子数据插入成功：5 辆车、5 个终端、5 名驾驶员、5 条绑定关系</li>
+<li>[ ] 从 <code>langdi.sql</code> 迁移的表字段语义完整保留（对照注释）</li>
+<li>[ ] 所有表均有 <code>COMMENT ON TABLE</code> 和关键字段 <code>COMMENT ON COLUMN</code></li>
+<li>[ ] 部分唯一索引 <code>WHERE valid_mark = 1</code> 正确生效（软删后可重名）</li>
+<li>[ ] <code>traj_gps_point</code> 插入测试数据后，空间查询 <code>WHERE ST_Within(location, ...)</code> 可命中索引</li>
+</ul>
+<hr />
+<h2 id="8">8. 修订记录</h2>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>日期</th>
+<th>修订人</th>
+<th>修订内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>2026-09-30</td>
+<td>system</td>
+<td>初版：创建 traj schema，定义 8 张表，迁移自 langdi.sql，新增 PostGIS 几何字段</td>
+</tr>
+</tbody>
+</table>
+  </main>
+</div>
+<script>
+// 移动端：点击目录链接后自动收起抽屉
+document.querySelectorAll('.toc a').forEach(function(a){
+  a.addEventListener('click',function(){document.querySelector('.toc').classList.remove('open');});
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+// 初始化 Mermaid 图表渲染
+if (window.mermaid) {
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  // 将 fenced code block 的 mermaid 代码转换为 mermaid div
+  document.querySelectorAll('pre code.language-mermaid').forEach(function(block) {
+    var pre = block.parentElement;
+    var div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = block.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.run();
+}
+</script>
+</body>
+</html>

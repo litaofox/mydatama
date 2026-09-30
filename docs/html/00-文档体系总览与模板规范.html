@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>文档体系总览与模板规范</title>
+<style>
+:root{
+  --primary:#1f5fbf; --primary-dark:#174a96; --bg:#f4f6fa; --card:#ffffff;
+  --text:#1f2733; --muted:#667085; --border:#e3e8f0; --code-bg:#1e2530;
+  --accent-bg:#eef4ff; --th-bg:#1f5fbf; --th-text:#fff;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.85;font-size:16px;}
+.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:var(--primary-dark);
+  color:#fff;display:flex;align-items:center;padding:0 20px;z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.topbar .home{color:#fff;text-decoration:none;font-size:14px;opacity:.85;margin-right:18px;white-space:nowrap;}
+.topbar .home:hover{opacity:1;}
+.topbar .title{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.layout{display:flex;max-width:1280px;margin:56px auto 0;}
+.toc{width:260px;flex-shrink:0;padding:24px 0 24px 20px;}
+.toc-inner{position:sticky;top:76px;max-height:calc(100vh - 100px);overflow-y:auto;
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 14px;}
+.toc-inner .toc-title{font-size:13px;font-weight:700;color:var(--muted);
+  letter-spacing:1px;margin:0 0 10px 4px;}
+.toc-inner ul{list-style:none;margin:0;padding:0;}
+.toc-inner ul ul{padding-left:14px;}
+.toc-inner li{margin:3px 0;}
+.toc-inner a{display:block;color:#44506a;text-decoration:none;font-size:13.5px;
+  line-height:1.5;padding:3px 8px;border-radius:6px;border-left:2px solid transparent;}
+.toc-inner a:hover{background:var(--accent-bg);color:var(--primary);}
+.content{flex:1;min-width:0;background:var(--card);margin:20px 24px 60px;padding:40px 52px;
+  border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 1px 4px rgba(16,42,90,.05);}
+h1{font-size:28px;color:var(--primary-dark);border-bottom:3px solid var(--primary);
+  padding-bottom:14px;margin-top:0;}
+h2{font-size:22px;color:var(--primary-dark);margin-top:42px;
+  border-left:5px solid var(--primary);padding-left:12px;}
+h3{font-size:18px;color:#28456e;margin-top:32px;}
+h4{font-size:16px;color:#344054;margin-top:24px;}
+p{margin:14px 0;}
+blockquote{margin:18px 0;padding:12px 18px;background:var(--accent-bg);
+  border-left:4px solid var(--primary);color:#3d4a5c;border-radius:0 8px 8px 0;}
+blockquote p{margin:6px 0;}
+a{color:var(--primary);}
+ul,ol{padding-left:26px;}
+li{margin:5px 0;}
+code{font-family:Consolas,"Courier New",monospace;font-size:13.5px;
+  background:#eef1f6;color:#b02a5e;padding:2px 6px;border-radius:4px;}
+pre{background:var(--code-bg);color:#d7e0ee;border-radius:10px;padding:18px 20px;
+  overflow-x:auto;line-height:1.55;font-size:13.5px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);}
+pre code{background:none;color:inherit;padding:0;font-size:inherit;}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:14.5px;
+  box-shadow:0 1px 3px rgba(16,42,90,.08);border-radius:8px;overflow:hidden;}
+th{background:var(--th-bg);color:var(--th-text);font-weight:600;padding:10px 14px;
+  text-align:left;border:1px solid var(--primary);white-space:nowrap;}
+td{padding:9px 14px;border:1px solid var(--border);vertical-align:top;}
+tbody tr:nth-child(even){background:#f7f9fd;}
+tbody tr:hover{background:var(--accent-bg);}
+hr{border:none;border-top:1px solid var(--border);margin:36px 0;}
+strong{color:#16345f;}
+h1 strong,h2 strong,h3 strong{color:inherit;}
+.toc-btn{display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
+  color:#fff;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer;margin-right:12px;}
+@media (max-width:900px){
+  .toc{display:block;position:fixed;top:56px;left:0;bottom:0;width:280px;z-index:90;
+    padding:16px;background:var(--bg);transform:translateX(-100%);transition:transform .25s;
+    overflow-y:auto;}
+  .toc.open{transform:translateX(0);box-shadow:4px 0 16px rgba(0,0,0,.15);}
+  .toc-btn{display:inline-block;}
+  .content{margin:12px 10px 40px;padding:24px 18px;}
+  .topbar .title{font-size:13px;}
+  table{font-size:13px;display:block;overflow-x:auto;}
+}
+@media print{
+  .topbar,.toc{display:none;}
+  .layout{margin:0;}
+  .content{border:none;box-shadow:none;margin:0;padding:0;}
+  pre,table,blockquote{break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="toc-btn" onclick="document.querySelector('.toc').classList.toggle('open')">☰ 目录</button>
+  <a class="home" href="index.html">← 文档首页</a>
+  <span class="title">文档体系总览与模板规范</span>
+</div>
+<div class="layout">
+  <aside class="toc"><div class="toc-inner">
+    <p class="toc-title">目录导航</p>
+    
+<ul>
+<li><a href="#_1">详细设计文档体系总览与模板规范</a><ul>
+<li><a href="#1">1. 文档编号规则</a></li>
+<li><a href="#2">2. 完整文档清单</a><ul>
+<li><a href="#21-sys">2.1 系统级文档（SYS）</a></li>
+<li><a href="#22-mod">2.2 模块级文档（MOD）</a></li>
+<li><a href="#23-uc">2.3 用例级文档（UC）</a></li>
+<li><a href="#24-api">2.4 接口级文档（API）</a></li>
+<li><a href="#25-ddl">2.5 数据库级文档（DDL）</a></li>
+<li><a href="#_2">文档总量统计</a></li>
+</ul>
+</li>
+<li><a href="#3">3. 文档编写优先级</a></li>
+<li><a href="#4">4. 标准文档模板</a><ul>
+<li><a href="#41-sys">4.1 系统级文档模板（SYS）</a></li>
+<li><a href="#42-mod">4.2 模块级文档模板（MOD）</a></li>
+<li><a href="#43-uc">4.3 用例级文档模板（UC）</a></li>
+<li><a href="#44-api">4.4 接口级文档模板（API）</a></li>
+<li><a href="#45-ddl">4.5 数据库级文档模板（DDL）</a></li>
+</ul>
+</li>
+<li><a href="#5">5. 文档编写规范</a><ul>
+<li><a href="#51">5.1 通用规范</a></li>
+<li><a href="#52">5.2 版本管理</a></li>
+<li><a href="#53">5.3 审阅与验收</a></li>
+<li><a href="#54">5.4 文件组织</a></li>
+</ul>
+</li>
+<li><a href="#6-mermaid">6. Mermaid 图示规范</a><ul>
+<li><a href="#61">6.1 时序图标准</a></li>
+<li><a href="#62">6.2 流程图标准</a></li>
+<li><a href="#63-er">6.3 ER 图标准</a></li>
+<li><a href="#64">6.4 状态机标准</a></li>
+</ul>
+</li>
+<li><a href="#7">7. 下一步行动</a></li>
+</ul>
+</li>
+</ul>
+
+  </div></aside>
+  <main class="content">
+<h1 id="_1">详细设计文档体系总览与模板规范</h1>
+<blockquote>
+<p>版本：v1.0 ｜ 日期：2026-09-30
+定位：本文档是整个详细设计文档体系的"目录"与"模板标准"，定义所有设计文档的编号规则、分类、内容模板与编写规范。后续每份文档均严格遵循本文档定义的模板。</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 文档编号规则</h2>
+<pre><code>&lt;层级&gt;-&lt;模块缩码&gt;-&lt;序号&gt;
+
+层级：
+  SYS    系统级（跨模块）
+  MOD    模块级（单模块）
+  UC     用例级（单业务场景）
+  API    接口级（单模块接口规格）
+  DDL    数据库级（单 schema）
+
+模块缩码：
+  IAM    身份认证与权限管理
+  PROC   多模态数据处理
+  GOV    数据治理与资产目录
+  DS     数据集与质量校验
+  SCR    数据可视化大屏
+  PROD   数据产品加工生成
+  TRAJ   北斗轨迹数据模拟与可视化
+  COM    公共基础
+
+序号：三位数字，按模块内顺序编排
+</code></pre>
+<p>示例：<code>MOD-PROC-001</code> = 数据处理模块的第 1 份设计文档</p>
+<hr />
+<h2 id="2">2. 完整文档清单</h2>
+<h3 id="21-sys">2.1 系统级文档（SYS）</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>文档名称</th>
+<th>内容概述</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SYS-001</td>
+<td>系统总体架构设计</td>
+<td>分层架构、模块划分、技术栈、部署拓扑、技术选型决策</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>SYS-002</td>
+<td>系统部署设计</td>
+<td>Docker Compose 编排、容器资源、环境分级、网络分区、监控告警</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>SYS-003</td>
+<td>系统安全设计</td>
+<td>等保三级对标、认证授权体系、数据加密、脱敏策略、审计、隐私保护</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>SYS-004</td>
+<td>系统异常处理设计</td>
+<td>异常分类体系、错误码规范、全局异常处理、降级策略、告警机制</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>SYS-005</td>
+<td>数据模型总体设计</td>
+<td>四 schema 总览、ER 全图、公共字段规范、命名规范、迁移策略</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>SYS-006</td>
+<td>系统业务流程总览</td>
+<td>端到端主链路、跨模块协作时序、状态机汇总</td>
+<td>待编写</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-mod">2.2 模块级文档（MOD）</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>文档名称</th>
+<th>所属模块</th>
+<th>内容概述</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MOD-IAM-001</td>
+<td>身份认证与权限管理模块设计</td>
+<td>IAM</td>
+<td>登录/JWT/RBAC/ABAC/审计过滤器/API Key/会话管理</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>MOD-PROC-001</td>
+<td>多模态数据处理模块设计</td>
+<td>PROC</td>
+<td>上传/PG队列/五阶段流水线/四模态处理器/脱敏引擎/Storage抽象</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>MOD-GOV-001</td>
+<td>数据治理与资产目录模块设计</td>
+<td>GOV</td>
+<td>资产盘点/元数据/血缘/热力图/检索/标准管理</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>MOD-DS-001</td>
+<td>数据集与质量校验模块设计</td>
+<td>DS</td>
+<td>数据集构建/版本管理/三维质检/报告生成/版本对比</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>MOD-SCR-001</td>
+<td>数据可视化大屏模块设计</td>
+<td>SCR</td>
+<td>四聚合接口/前端大屏布局/轮询/交互下钻/门户聚合</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>MOD-PROD-001</td>
+<td>数据产品加工生成模块设计</td>
+<td>PROD</td>
+<td>加工流水线/元数据/合规引擎/登记挂牌/交易对接/模板版本</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>MOD-COM-001</td>
+<td>公共基础模块设计</td>
+<td>COM</td>
+<td>统一响应体/异常体系/JWT工具/ABAC引擎/审计框架/MyBatis基类</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>MOD-TRAJ-001</td>
+<td>轨迹数据模拟与可视化模块设计</td>
+<td>TRAJ</td>
+<td>模拟器/数据接入/PostGIS存储/Leaflet地图/轨迹回放/查询/大屏/指标计算</td>
+<td>已完成</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-uc">2.3 用例级文档（UC）</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>用例名称</th>
+<th>所属模块</th>
+<th>前置依赖</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UC-IAM-001</td>
+<td>用户登录认证</td>
+<td>IAM</td>
+<td>—</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-IAM-002</td>
+<td>角色与权限配置</td>
+<td>IAM</td>
+<td>UC-IAM-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-IAM-003</td>
+<td>ABAC策略配置</td>
+<td>IAM</td>
+<td>UC-IAM-002</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-IAM-004</td>
+<td>审计日志查询与导出</td>
+<td>IAM</td>
+<td>UC-IAM-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-IAM-005</td>
+<td>API Key 生成与管理</td>
+<td>IAM</td>
+<td>UC-IAM-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-PROC-001</td>
+<td>结构化数据上传与处理</td>
+<td>PROC</td>
+<td>UC-IAM-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-PROC-002</td>
+<td>多模态文件上传与处理</td>
+<td>PROC</td>
+<td>UC-IAM-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-PROC-003</td>
+<td>数据脱敏处理</td>
+<td>PROC</td>
+<td>UC-PROC-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-PROC-004</td>
+<td>处理任务状态查询与重试</td>
+<td>PROC</td>
+<td>UC-PROC-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-PROC-005</td>
+<td>标注任务管理（Label Studio集成）</td>
+<td>PROC</td>
+<td>UC-PROC-002</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-PROC-006</td>
+<td>处理任务断点续传与恢复</td>
+<td>PROC</td>
+<td>UC-PROC-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-GOV-001</td>
+<td>资产自动盘点与登记</td>
+<td>GOV</td>
+<td>UC-PROC-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-GOV-002</td>
+<td>资产目录检索与浏览</td>
+<td>GOV</td>
+<td>UC-GOV-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-GOV-003</td>
+<td>数据血缘追踪</td>
+<td>GOV</td>
+<td>UC-GOV-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-GOV-004</td>
+<td>资产使用频率热力图</td>
+<td>GOV</td>
+<td>UC-GOV-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-GOV-005</td>
+<td>数据标准管理</td>
+<td>GOV</td>
+<td>UC-IAM-002</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-DS-001</td>
+<td>数据集构建</td>
+<td>DS</td>
+<td>UC-GOV-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-DS-002</td>
+<td>数据集版本管理</td>
+<td>DS</td>
+<td>UC-DS-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-DS-003</td>
+<td>数据集质量报告生成</td>
+<td>DS</td>
+<td>UC-DS-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-DS-004</td>
+<td>数据集版本对比</td>
+<td>DS</td>
+<td>UC-DS-002</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-SCR-001</td>
+<td>大屏数据实时展示</td>
+<td>SCR</td>
+<td>UC-GOV-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-SCR-002</td>
+<td>大屏交互式下钻</td>
+<td>SCR</td>
+<td>UC-SCR-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-PROD-001</td>
+<td>数据产品加工流水线编排</td>
+<td>PROD</td>
+<td>UC-GOV-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-PROD-002</td>
+<td>产品元数据与说明书生成</td>
+<td>PROD</td>
+<td>UC-PROD-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-PROD-003</td>
+<td>合规性校验</td>
+<td>PROD</td>
+<td>UC-PROD-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-PROD-004</td>
+<td>产品登记与挂牌</td>
+<td>PROD</td>
+<td>UC-PROD-003</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-PROD-005</td>
+<td>交易流程与交付</td>
+<td>PROD</td>
+<td>UC-PROD-004</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-PROD-006</td>
+<td>产品模板与版本管理</td>
+<td>PROD</td>
+<td>UC-PROD-001</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>UC-TRAJ-001</td>
+<td>模拟数据生成与启动</td>
+<td>TRAJ</td>
+<td>UC-IAM-001</td>
+<td>已完成</td>
+</tr>
+<tr>
+<td>UC-TRAJ-002</td>
+<td>轨迹回放</td>
+<td>TRAJ</td>
+<td>UC-TRAJ-001</td>
+<td>已完成</td>
+</tr>
+<tr>
+<td>UC-TRAJ-003</td>
+<td>轨迹查询</td>
+<td>TRAJ</td>
+<td>UC-TRAJ-001</td>
+<td>已完成</td>
+</tr>
+<tr>
+<td>UC-TRAJ-004</td>
+<td>轨迹总览大屏</td>
+<td>TRAJ</td>
+<td>UC-TRAJ-001</td>
+<td>已完成</td>
+</tr>
+</tbody>
+</table>
+<h3 id="24-api">2.4 接口级文档（API）</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>文档名称</th>
+<th>所属模块</th>
+<th>端点数量</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API-IAM-001</td>
+<td>认证接口规格</td>
+<td>IAM</td>
+<td>4</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-IAM-002</td>
+<td>用户管理接口规格</td>
+<td>IAM</td>
+<td>5</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-IAM-003</td>
+<td>角色与权限接口规格</td>
+<td>IAM</td>
+<td>6</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-IAM-004</td>
+<td>ABAC策略接口规格</td>
+<td>IAM</td>
+<td>4</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-IAM-005</td>
+<td>API Key 接口规格</td>
+<td>IAM</td>
+<td>3</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-IAM-006</td>
+<td>审计日志接口规格</td>
+<td>IAM</td>
+<td>2</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-PROC-001</td>
+<td>文件上传与管理接口规格</td>
+<td>PROC</td>
+<td>4</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-PROC-002</td>
+<td>处理任务接口规格</td>
+<td>PROC</td>
+<td>3</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-PROC-003</td>
+<td>标注接口规格</td>
+<td>PROC</td>
+<td>2</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-GOV-001</td>
+<td>资产目录接口规格</td>
+<td>GOV</td>
+<td>3</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-GOV-002</td>
+<td>血缘追踪接口规格</td>
+<td>GOV</td>
+<td>1</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-GOV-003</td>
+<td>热力图接口规格</td>
+<td>GOV</td>
+<td>1</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-GOV-004</td>
+<td>数据标准接口规格</td>
+<td>GOV</td>
+<td>4</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-DS-001</td>
+<td>数据集接口规格</td>
+<td>DS</td>
+<td>3</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-DS-002</td>
+<td>版本与质量报告接口规格</td>
+<td>DS</td>
+<td>3</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-SCR-001</td>
+<td>大屏聚合接口规格</td>
+<td>SCR</td>
+<td>4</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-PROD-001</td>
+<td>产品加工接口规格</td>
+<td>PROD</td>
+<td>5</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-PROD-002</td>
+<td>合规与登记接口规格</td>
+<td>PROD</td>
+<td>4</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-PROD-003</td>
+<td>交易与交付接口规格</td>
+<td>PROD</td>
+<td>4</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-COM-001</td>
+<td>内部接口规格</td>
+<td>COM</td>
+<td>3</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-COM-002</td>
+<td>开放API接口规格</td>
+<td>COM</td>
+<td>4</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>API-TRAJ-001</td>
+<td>轨迹数据接口规格</td>
+<td>TRAJ</td>
+<td>8</td>
+<td>已完成</td>
+</tr>
+<tr>
+<td>API-TRAJ-002</td>
+<td>模拟器控制接口规格</td>
+<td>TRAJ</td>
+<td>6</td>
+<td>已完成</td>
+</tr>
+</tbody>
+</table>
+<h3 id="25-ddl">2.5 数据库级文档（DDL）</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>文档名称</th>
+<th>schema</th>
+<th>表数量</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DDL-IAM-001</td>
+<td>IAM schema 数据库设计</td>
+<td>iam</td>
+<td>7</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>DDL-PROC-001</td>
+<td>PROC schema 数据库设计</td>
+<td>proc</td>
+<td>3</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>DDL-GOV-001</td>
+<td>GOV schema 数据库设计</td>
+<td>gov</td>
+<td>8</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>DDL-DS-001</td>
+<td>DS schema 数据库设计</td>
+<td>ds</td>
+<td>3</td>
+<td>待编写</td>
+</tr>
+<tr>
+<td>DDL-TRAJ-001</td>
+<td>TRAJ schema 数据库设计</td>
+<td>traj</td>
+<td>8</td>
+<td>已完成</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_2">文档总量统计</h3>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>数量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>系统级（SYS）</td>
+<td>6</td>
+</tr>
+<tr>
+<td>模块级（MOD）</td>
+<td>8</td>
+</tr>
+<tr>
+<td>用例级（UC）</td>
+<td>32</td>
+</tr>
+<tr>
+<td>接口级（API）</td>
+<td>23</td>
+</tr>
+<tr>
+<td>数据库级（DDL）</td>
+<td>5</td>
+</tr>
+<tr>
+<td><strong>合计</strong></td>
+<td><strong>74</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3">3. 文档编写优先级</h2>
+<p>按开发阶段（S0~S6）排序，每阶段所需文档在该阶段开始前完成：</p>
+<table>
+<thead>
+<tr>
+<th>优先级</th>
+<th>开发阶段</th>
+<th>配套文档</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0</td>
+<td>S0 地基</td>
+<td>SYS-001~006 + DDL 全部 + MOD-COM-001 + API-COM-001</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>S1 认证审计</td>
+<td>MOD-IAM-001 + UC-IAM-001~005 + API-IAM-001~006</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>S2 数据处理</td>
+<td>MOD-PROC-001 + UC-PROC-001~006 + API-PROC-001~003</td>
+</tr>
+<tr>
+<td>P3</td>
+<td>S3 资产血缘</td>
+<td>MOD-GOV-001 + UC-GOV-001~005 + API-GOV-001~004</td>
+</tr>
+<tr>
+<td>P4</td>
+<td>S4 数据集质量</td>
+<td>MOD-DS-001 + UC-DS-001~004 + API-DS-001~002</td>
+</tr>
+<tr>
+<td>P5</td>
+<td>S5 大屏门户</td>
+<td>MOD-SCR-001 + UC-SCR-001~002 + API-SCR-001</td>
+</tr>
+<tr>
+<td>P6</td>
+<td>S6 标注可靠性</td>
+<td>UC-PROC-005 补完</td>
+</tr>
+<tr>
+<td>P7</td>
+<td>S7 北斗/产品</td>
+<td>MOD-PROD-001 + UC-PROD-001~006 + API-PROD-001~003 + API-COM-002 + MOD-TRAJ-001 + UC-TRAJ-001~004 + API-TRAJ-001~002 + DDL-TRAJ-001</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4">4. 标准文档模板</h2>
+<h3 id="41-sys">4.1 系统级文档模板（SYS）</h3>
+<pre><code class="language-markdown"># [文档编号] [文档名称]
+
+&gt; 版本：v1.0 ｜ 日期：YYYY-MM-DD
+&gt; 关联文档：[上下游文档编号列表]
+
+## 1. 概述
+### 1.1 文档目的
+### 1.2 读者对象
+### 1.3 术语与缩略语
+
+## 2. 设计目标与约束
+### 2.1 功能目标
+### 2.2 非功能目标（性能/可用性/安全性）
+### 2.3 技术约束
+
+## 3. 详细设计
+### 3.1 [按主题分小节]
+### 3.2 [...]
+### 3.N
+
+## 4. 与其他模块/文档的关系
+| 关联模块 | 关系类型 | 关联文档 | 说明 |
+
+## 5. 设计决策记录
+| 决策编号 | 决策内容 | 理由 | 关联 ADR |
+
+## 6. 验收标准
+- [ ] 验收项 1
+- [ ] 验收项 2
+
+## 7. 修订记录
+| 版本 | 日期 | 修订人 | 修订内容 |
+</code></pre>
+<h3 id="42-mod">4.2 模块级文档模板（MOD）</h3>
+<pre><code class="language-markdown"># [文档编号] [模块名称]模块设计
+
+&gt; 版本：v1.0 ｜ 日期：YYYY-MM-DD
+&gt; 关联文档：SYS-001, SYS-005, DDL-xxx, API-xxx
+
+## 1. 模块概述
+### 1.1 模块定位与职责边界
+### 1.2 技术栈
+### 1.3 模块在系统中的位置（架构图引用）
+
+## 2. 模块架构
+### 2.1 内部分层结构（类图/包图）
+### 2.2 对外发布的接口（api 子包清单）
+### 2.3 依赖的其他模块接口
+### 2.4 模块依赖规则（ArchUnit 约束）
+
+## 3. 核心类与组件设计
+### 3.1 [组件名]
+- **职责**：一句话
+- **接口定义**：方法签名 + Javadoc 摘要
+- **实现类**：实现策略
+- **依赖**：调用哪些组件
+- **被依赖**：被哪些组件调用
+
+### 3.2 [组件名]
+（同上格式）
+
+## 4. 数据模型
+### 4.1 涉及的表（引用 DDL 文档）
+### 4.2 实体关系（ER 片图）
+### 4.3 读写规则与并发控制
+
+## 5. 业务流程
+### 5.1 [流程名]
+- 触发条件
+- 前置条件
+- 正常流程（时序图 / 流程图描述）
+- 异常流程
+- 后置条件
+- 关联用例：UC-xxx
+
+### 5.2 [流程名]
+（同上）
+
+## 6. 接口清单
+| 方法 | 路径 | 说明 | 权限 | 详细文档 |
+
+## 7. 异常处理
+### 7.1 模块特有异常
+| 异常码 | 异常消息 | 触发条件 | 处理策略 |
+
+### 7.2 降级策略
+
+## 8. 安全设计
+### 8.1 权限控制点
+### 8.2 数据脱敏点
+### 8.3 审计点
+
+## 9. 配置项
+| 配置键 | 类型 | 默认值 | 说明 |
+
+## 10. 扩展点
+### 10.1 [扩展点名]
+- 接口/抽象类
+- 现有实现
+- 如何新增实现
+
+## 11. 验收标准
+## 12. 修订记录
+</code></pre>
+<h3 id="43-uc">4.3 用例级文档模板（UC）</h3>
+<pre><code class="language-markdown"># [文档编号] [用例名称]
+
+&gt; 版本：v1.0 ｜ 日期：YYYY-MM-DD
+&gt; 所属模块：[模块名]
+&gt; 关联文档：MOD-xxx, API-xxx
+
+## 1. 用例概述
+### 1.1 用例名称
+### 1.2 参与者（角色）
+### 1.3 前置条件
+### 1.4 后置条件（成功）
+### 1.5 后置条件（失败）
+
+## 2. 主流程
+### 2.1 流程步骤
+| 步骤 | 执行者 | 动作 | 系统响应 | 数据变更 |
+
+### 2.2 流程图
+（Mermaid sequenceDiagram 或 flowchart）
+
+### 2.3 时序图
+（Mermaid sequenceDiagram，含前端/网关/后端/数据库交互）
+
+## 3. 备选流程
+### 3.1 [备选场景名]
+- 触发条件
+- 处理步骤
+
+## 4. 异常流程
+### 4.1 [异常场景名]
+| 触发条件 | 系统行为 | 用户可见结果 | 错误码 | 数据回滚 |
+
+## 5. 业务规则
+| 规则编号 | 规则描述 | 约束值/公式 |
+
+## 6. 界面设计
+### 6.1 页面布局描述
+### 6.2 交互说明
+### 6.3 权限要求
+
+## 7. 接口调用
+| 步骤 | 接口 | 方法 | 请求摘要 | 响应摘要 |
+
+## 8. 数据变更
+| 表 | 操作 | 字段变更说明 |
+
+## 9. 测试要点
+| 测试场景 | 预期结果 | 测试数据 |
+
+## 10. 修订记录
+</code></pre>
+<h3 id="44-api">4.4 接口级文档模板（API）</h3>
+<pre><code class="language-markdown"># [文档编号] [接口组名称]接口规格
+
+&gt; 版本：v1.0 ｜ 日期：YYYY-MM-DD
+&gt; 所属模块：[模块名]
+&gt; 基础路径：/api/xxx 或 /internal/xxx 或 /openapi/v1/xxx
+
+## 1. 概述
+### 1.1 认证方式
+### 1.2 通用请求头
+### 1.3 通用响应体格式
+
+## 2. 接口清单
+| 序号 | 方法 | 路径 | 说明 | 权限 |
+
+## 3. 接口详情
+
+### 3.1 [接口名称]
+- **方法**：POST
+- **路径**：/api/xxx/yyy
+- **权限**：module:resource:action
+- **描述**：一句话功能说明
+
+#### 请求
+- **Content-Type**：multipart/form-data | application/json
+- **请求头**：
+| 头名 | 必填 | 说明 |
+- **路径参数**：
+| 参数 | 类型 | 必填 | 说明 |
+- **查询参数**：
+| 参数 | 类型 | 必填 | 默认 | 说明 |
+- **请求体**：
+（JSON 示例 + 字段表）
+| 字段 | 类型 | 必填 | 校验规则 | 说明 |
+
+#### 响应
+- **成功**（200）：
+（JSON 示例 + 字段表）
+| 字段 | 类型 | 说明 |
+- **错误响应**：
+| HTTP 状态码 | code | message | 场景 |
+
+#### 示例
+- **请求示例**：
+（完整 curl 或 JSON）
+- **响应示例**：
+（完整 JSON）
+
+#### 变更记录
+| 版本 | 变更内容 |
+
+### 3.2 [接口名称]
+（同上格式）
+
+## 4. 错误码
+| code | HTTP | message | 场景 |
+
+## 5. 修订记录
+</code></pre>
+<h3 id="45-ddl">4.5 数据库级文档模板（DDL）</h3>
+<pre><code class="language-markdown"># [文档编号] [schema名称] Schema 数据库设计
+
+&gt; 版本：v1.0 ｜ 日期：YYYY-MM-DD
+&gt; 数据库：PostgreSQL 16
+&gt; Schema：[schema名]
+
+## 1. 概述
+### 1.1 Schema 用途
+### 1.2 表清单
+| 表名 | 中文名 | 用途 | 行量级 |
+
+## 2. 公共字段规范
+（所有表共有的字段定义与说明）
+
+## 3. 表设计详情
+
+### 3.1 [表名]
+- **中文名**：xxx
+- **用途**：一句话
+- **行量级**：预估
+- **增长率**：每日/每月增量
+
+#### 字段定义
+| 列名 | 类型 | 可空 | 默认 | 注释（业务含义） |
+| 主键 | — | — | — | — |
+| 索引 | — | — | — | 命中场景说明 |
+
+#### DDL
+（完整 CREATE TABLE + COMMENT + INDEX 语句）
+
+#### 软删与唯一约束
+（说明 deleted 字段与部分唯一索引策略）
+
+#### 关联关系
+| 关联表 | 关联字段 | 关系类型 | 说明 |
+
+#### 读写规则
+- **写入方**：哪个服务/模块
+- **读取方**：哪些服务/模块
+- **并发控制**：乐观锁/悲观锁/SKIP LOCKED
+- **归档策略**：保留周期与归档方式
+
+### 3.2 [表名]
+（同上格式）
+
+## 4. 种子数据
+### 4.1 [数据组名]
+（INSERT 语句 + 业务说明）
+
+## 5. ER 片图
+（该 schema 内的表关系图，Mermaid erDiagram）
+
+## 6. 迁移脚本
+| 版本 | 文件名 | 变更内容 |
+
+## 7. 修订记录
+</code></pre>
+<hr />
+<h2 id="5">5. 文档编写规范</h2>
+<h3 id="51">5.1 通用规范</h3>
+<ul>
+<li><strong>语言</strong>：中文；代码/SQL/路径用英文</li>
+<li><strong>图示</strong>：优先使用 Mermaid 语法（VS Code / GitHub 原生渲染），复杂架构图可用 ASCII</li>
+<li><strong>交叉引用</strong>：用文档编号引用，如"详见 UC-PROC-001 §3.1"</li>
+<li><strong>表格优先</strong>：结构化信息用表格，不用长段落</li>
+<li><strong>一处定义一处引用</strong>：同一概念/规则只在一处详细定义，他处引用</li>
+</ul>
+<h3 id="52">5.2 版本管理</h3>
+<ul>
+<li>每份文档独立版本，修订记录在文末</li>
+<li>破坏性变更升主版本（v2.0），补充性变更升次版本（v1.1）</li>
+<li>文档与代码同节奏：开发阶段开始前文档定稿 v1.0，开发中可修 v1.x</li>
+</ul>
+<h3 id="53">5.3 审阅与验收</h3>
+<ul>
+<li>每份文档完成后由项目评审通过方可作为开发依据</li>
+<li>文档与实现不符时，<strong>以代码为准并立即更新文档</strong>（不积压技术债）</li>
+<li>PR 合并前检查是否需同步更新设计文档</li>
+</ul>
+<h3 id="54">5.4 文件组织</h3>
+<pre><code>docs/design/
+├── 00-文档体系总览与模板规范.md   ← 本文档
+├── sys/                            系统级
+│   ├── SYS-001-系统总体架构设计.md
+│   ├── SYS-002-系统部署设计.md
+│   └── ...
+├── mod/                            模块级
+│   ├── MOD-IAM-001-身份认证与权限管理模块设计.md
+│   └── ...
+├── uc/                             用例级
+│   ├── UC-IAM-001-用户登录认证.md
+│   └── ...
+├── api/                            接口级
+│   ├── API-IAM-001-认证接口规格.md
+│   └── ...
+└── ddl/                            数据库级
+    ├── DDL-IAM-001-IAM-schema数据库设计.md
+    └── ...
+</code></pre>
+<hr />
+<h2 id="6-mermaid">6. Mermaid 图示规范</h2>
+<h3 id="61">6.1 时序图标准</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant U as 用户
+    participant F as 前端
+    participant N as Nginx
+    participant J as Java后端
+    participant P as Python处理服务
+    participant D as PostgreSQL
+
+    U-&gt;&gt;F: 操作
+    F-&gt;&gt;N: HTTP请求
+    N-&gt;&gt;J: 转发
+    J-&gt;&gt;D: SQL
+    D--&gt;&gt;J: 结果
+    J--&gt;&gt;N: 响应
+    N--&gt;&gt;F: 转发
+    F--&gt;&gt;U: 展示
+</code></pre>
+<h3 id="62">6.2 流程图标准</h3>
+<pre><code class="language-mermaid">flowchart TD
+    A[开始] --&gt; B{条件判断}
+    B -- 是 --&gt; C[处理步骤1]
+    B -- 否 --&gt; D[处理步骤2]
+    C --&gt; E[结束]
+    D --&gt; E
+</code></pre>
+<h3 id="63-er">6.3 ER 图标准</h3>
+<pre><code class="language-mermaid">erDiagram
+    users ||--o{ user_roles : &quot;拥有&quot;
+    roles ||--o{ user_roles : &quot;被分配&quot;
+    roles ||--o{ role_permissions : &quot;授予&quot;
+    permissions ||--o{ role_permissions : &quot;被授予&quot;
+    users {
+        bigint id PK
+        varchar username UK
+        varchar password_hash
+        int secret_level
+    }
+</code></pre>
+<h3 id="64">6.4 状态机标准</h3>
+<pre><code class="language-mermaid">stateDiagram-v2
+    [*] --&gt; UPLOADED: 上传完成
+    UPLOADED --&gt; PROCESSING: 入队
+    PROCESSING --&gt; READY: 全阶段成功
+    PROCESSING --&gt; FAILED: 任一阶段失败
+    FAILED --&gt; PROCESSING: 重试
+    READY --&gt; [*]
+</code></pre>
+<hr />
+<h2 id="7">7. 下一步行动</h2>
+<p>本文档经评审通过后，按 §3 定义的优先级逐批编写：</p>
+<ul>
+<li><strong>第一批（P0）</strong>：SYS-001~006 + DDL 全部 4 份 + MOD-COM-001 + API-COM-001（共 12 份）</li>
+<li><strong>第二批（P1）</strong>：MOD-IAM-001 + UC-IAM 全部 5 份 + API-IAM 全部 6 份（共 12 份）</li>
+<li><strong>第三批（P2）</strong>：MOD-PROC-001 + UC-PROC 全部 6 份 + API-PROC 全部 3 份（共 10 份）</li>
+<li>以此类推</li>
+</ul>
+<p>每批完成后提交 git 并生成 HTML 阅读版。</p>
+  </main>
+</div>
+<script>
+// 移动端：点击目录链接后自动收起抽屉
+document.querySelectorAll('.toc a').forEach(function(a){
+  a.addEventListener('click',function(){document.querySelector('.toc').classList.remove('open');});
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+// 初始化 Mermaid 图表渲染
+if (window.mermaid) {
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  // 将 fenced code block 的 mermaid 代码转换为 mermaid div
+  document.querySelectorAll('pre code.language-mermaid').forEach(function(block) {
+    var pre = block.parentElement;
+    var div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = block.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.run();
+}
+</script>
+</body>
+</html>

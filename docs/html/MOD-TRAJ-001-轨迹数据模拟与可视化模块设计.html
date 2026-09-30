@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MOD-TRAJ-001-轨迹数据模拟与可视化模块设计</title>
+<style>
+:root{
+  --primary:#1f5fbf; --primary-dark:#174a96; --bg:#f4f6fa; --card:#ffffff;
+  --text:#1f2733; --muted:#667085; --border:#e3e8f0; --code-bg:#1e2530;
+  --accent-bg:#eef4ff; --th-bg:#1f5fbf; --th-text:#fff;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.85;font-size:16px;}
+.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:var(--primary-dark);
+  color:#fff;display:flex;align-items:center;padding:0 20px;z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.topbar .home{color:#fff;text-decoration:none;font-size:14px;opacity:.85;margin-right:18px;white-space:nowrap;}
+.topbar .home:hover{opacity:1;}
+.topbar .title{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.layout{display:flex;max-width:1280px;margin:56px auto 0;}
+.toc{width:260px;flex-shrink:0;padding:24px 0 24px 20px;}
+.toc-inner{position:sticky;top:76px;max-height:calc(100vh - 100px);overflow-y:auto;
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 14px;}
+.toc-inner .toc-title{font-size:13px;font-weight:700;color:var(--muted);
+  letter-spacing:1px;margin:0 0 10px 4px;}
+.toc-inner ul{list-style:none;margin:0;padding:0;}
+.toc-inner ul ul{padding-left:14px;}
+.toc-inner li{margin:3px 0;}
+.toc-inner a{display:block;color:#44506a;text-decoration:none;font-size:13.5px;
+  line-height:1.5;padding:3px 8px;border-radius:6px;border-left:2px solid transparent;}
+.toc-inner a:hover{background:var(--accent-bg);color:var(--primary);}
+.content{flex:1;min-width:0;background:var(--card);margin:20px 24px 60px;padding:40px 52px;
+  border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 1px 4px rgba(16,42,90,.05);}
+h1{font-size:28px;color:var(--primary-dark);border-bottom:3px solid var(--primary);
+  padding-bottom:14px;margin-top:0;}
+h2{font-size:22px;color:var(--primary-dark);margin-top:42px;
+  border-left:5px solid var(--primary);padding-left:12px;}
+h3{font-size:18px;color:#28456e;margin-top:32px;}
+h4{font-size:16px;color:#344054;margin-top:24px;}
+p{margin:14px 0;}
+blockquote{margin:18px 0;padding:12px 18px;background:var(--accent-bg);
+  border-left:4px solid var(--primary);color:#3d4a5c;border-radius:0 8px 8px 0;}
+blockquote p{margin:6px 0;}
+a{color:var(--primary);}
+ul,ol{padding-left:26px;}
+li{margin:5px 0;}
+code{font-family:Consolas,"Courier New",monospace;font-size:13.5px;
+  background:#eef1f6;color:#b02a5e;padding:2px 6px;border-radius:4px;}
+pre{background:var(--code-bg);color:#d7e0ee;border-radius:10px;padding:18px 20px;
+  overflow-x:auto;line-height:1.55;font-size:13.5px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);}
+pre code{background:none;color:inherit;padding:0;font-size:inherit;}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:14.5px;
+  box-shadow:0 1px 3px rgba(16,42,90,.08);border-radius:8px;overflow:hidden;}
+th{background:var(--th-bg);color:var(--th-text);font-weight:600;padding:10px 14px;
+  text-align:left;border:1px solid var(--primary);white-space:nowrap;}
+td{padding:9px 14px;border:1px solid var(--border);vertical-align:top;}
+tbody tr:nth-child(even){background:#f7f9fd;}
+tbody tr:hover{background:var(--accent-bg);}
+hr{border:none;border-top:1px solid var(--border);margin:36px 0;}
+strong{color:#16345f;}
+h1 strong,h2 strong,h3 strong{color:inherit;}
+.toc-btn{display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
+  color:#fff;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer;margin-right:12px;}
+@media (max-width:900px){
+  .toc{display:block;position:fixed;top:56px;left:0;bottom:0;width:280px;z-index:90;
+    padding:16px;background:var(--bg);transform:translateX(-100%);transition:transform .25s;
+    overflow-y:auto;}
+  .toc.open{transform:translateX(0);box-shadow:4px 0 16px rgba(0,0,0,.15);}
+  .toc-btn{display:inline-block;}
+  .content{margin:12px 10px 40px;padding:24px 18px;}
+  .topbar .title{font-size:13px;}
+  table{font-size:13px;display:block;overflow-x:auto;}
+}
+@media print{
+  .topbar,.toc{display:none;}
+  .layout{margin:0;}
+  .content{border:none;box-shadow:none;margin:0;padding:0;}
+  pre,table,blockquote{break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="toc-btn" onclick="document.querySelector('.toc').classList.toggle('open')">☰ 目录</button>
+  <a class="home" href="index.html">← 文档首页</a>
+  <span class="title">MOD-TRAJ-001-轨迹数据模拟与可视化模块设计</span>
+</div>
+<div class="layout">
+  <aside class="toc"><div class="toc-inner">
+    <p class="toc-title">目录导航</p>
+    
+<ul>
+<li><a href="#mod-traj-001">MOD-TRAJ-001 轨迹数据模拟与可视化模块设计</a><ul>
+<li><a href="#1">1. 模块概述</a><ul>
+<li><a href="#11">1.1 模块定位与职责边界</a></li>
+<li><a href="#12">1.2 技术栈</a></li>
+<li><a href="#13">1.3 模块在系统中的位置</a></li>
+</ul>
+</li>
+<li><a href="#2">2. 模块架构</a><ul>
+<li><a href="#21">2.1 内部分层结构</a></li>
+<li><a href="#22-api">2.2 对外发布的接口（api 子包清单）</a></li>
+<li><a href="#23">2.3 依赖的其他模块接口</a></li>
+<li><a href="#24-archunit">2.4 模块依赖规则（ArchUnit 约束）</a></li>
+</ul>
+</li>
+<li><a href="#3">3. 核心类与组件设计</a><ul>
+<li><a href="#31-trajectorygenerator">3.1 TrajectoryGenerator（模拟器·轨迹生成器）</a></li>
+<li><a href="#32-datapusher">3.2 DataPusher（模拟器·实时推送器）</a></li>
+<li><a href="#33-trajingestservice">3.3 TrajIngestService（数据接入服务）</a></li>
+<li><a href="#34-trajqueryservice">3.4 TrajQueryService（轨迹查询服务）</a></li>
+<li><a href="#35-trajreplayservice">3.5 TrajReplayService（轨迹回放服务）</a></li>
+<li><a href="#36-trajdashboardservice">3.6 TrajDashboardService（大屏聚合服务）</a></li>
+<li><a href="#37-trajmetricsservice">3.7 TrajMetricsService（指标计算服务）</a></li>
+<li><a href="#38-trajsimulatorservice">3.8 TrajSimulatorService（模拟器控制服务）</a></li>
+</ul>
+</li>
+<li><a href="#4">4. 数据模型</a><ul>
+<li><a href="#41">4.1 涉及的表</a></li>
+<li><a href="#42-er">4.2 实体关系（ER 片图）</a></li>
+<li><a href="#43">4.3 读写规则与并发控制</a></li>
+</ul>
+</li>
+<li><a href="#5">5. 业务流程</a><ul>
+<li><a href="#51">5.1 模拟数据生成与接入流程</a></li>
+<li><a href="#52">5.2 轨迹回放流程</a></li>
+<li><a href="#53">5.3 轨迹查询流程</a></li>
+<li><a href="#54">5.4 大屏实时展示流程</a></li>
+</ul>
+</li>
+<li><a href="#6">6. 接口清单</a></li>
+<li><a href="#7">7. 异常处理</a><ul>
+<li><a href="#71">7.1 模块特有异常</a></li>
+<li><a href="#72">7.2 降级策略</a></li>
+</ul>
+</li>
+<li><a href="#8">8. 安全设计</a><ul>
+<li><a href="#81">8.1 权限控制点</a></li>
+<li><a href="#82">8.2 数据脱敏点</a></li>
+<li><a href="#83">8.3 审计点</a></li>
+</ul>
+</li>
+<li><a href="#9">9. 配置项</a></li>
+<li><a href="#10">10. 扩展点</a><ul>
+<li><a href="#101">10.1 轨迹数据源扩展</a></li>
+<li><a href="#102">10.2 地图引擎扩展</a></li>
+<li><a href="#103">10.3 存储层扩展</a></li>
+</ul>
+</li>
+<li><a href="#11_1">11. 验收标准</a></li>
+<li><a href="#12_1">12. 修订记录</a></li>
+</ul>
+</li>
+</ul>
+
+  </div></aside>
+  <main class="content">
+<h1 id="mod-traj-001">MOD-TRAJ-001 轨迹数据模拟与可视化模块设计</h1>
+<blockquote>
+<p>版本：v1.0 ｜ 日期：2026-09-30
+关联文档：SYS-001, SYS-005, DDL-TRAJ-001, UC-TRAJ-001~004, API-TRAJ-001~002</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 模块概述</h2>
+<h3 id="11">1.1 模块定位与职责边界</h3>
+<p>TRAJ 模块是系统第 7 个业务模块，负责北斗导航轨迹数据的模拟接入、存储、可视化与查询分析。该模块作为 MVP 阶段的演示增强功能，补足系统在时空数据领域的展示能力。</p>
+<p><strong>职责边界</strong>：
+- ✅ 模拟北斗终端轨迹数据生成（Python 模拟器）
+- ✅ 轨迹数据接入（批量导入 + 实时推送两种模式）
+- ✅ 轨迹数据存储（PostgreSQL + PostGIS）
+- ✅ 轨迹可视化展示（地图渲染、回放、查询、大屏）
+- ✅ 轨迹指标计算（速度、距离、停留点）
+- ✅ 报警事件与抓拍图片元数据管理
+- ❌ 不负责真实北斗终端协议解析（演示阶段用模拟器）
+- ❌ 不负责实时流处理（Kafka/Flink 等留待生产阶段）
+- ❌ 不负责视频流传输（仅管理图片元数据）</p>
+<h3 id="12">1.2 技术栈</h3>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>技术</th>
+<th>版本</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>模拟器</td>
+<td>Python + FastAPI</td>
+<td>3.11 / 0.110</td>
+<td>轨迹数据生成与推送</td>
+</tr>
+<tr>
+<td>后端</td>
+<td>Java + Spring Boot</td>
+<td>17 / 3.2</td>
+<td>业务逻辑、查询服务</td>
+</tr>
+<tr>
+<td>持久化</td>
+<td>PostgreSQL + PostGIS</td>
+<td>16 / 3.4</td>
+<td>轨迹点空间存储与查询</td>
+</tr>
+<tr>
+<td>前端地图</td>
+<td>Leaflet + 高德瓦片</td>
+<td>1.9 / 栅格瓦片</td>
+<td>地图渲染（免费无需 Key）</td>
+</tr>
+<tr>
+<td>前端图表</td>
+<td>ECharts</td>
+<td>5.x</td>
+<td>大屏图表</td>
+</tr>
+<tr>
+<td>容器</td>
+<td>Docker Compose</td>
+<td>—</td>
+<td>postgis/postgis:16-3.4 镜像</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13">1.3 模块在系统中的位置</h3>
+<pre><code class="language-mermaid">graph LR
+    subgraph 前端
+        UI[Vue3 前端应用]
+        MAP[Leaflet 地图组件]
+    end
+
+    subgraph 模拟器
+        SIM[Python 模拟器 FastAPI]
+    end
+
+    subgraph Java后端
+        GW[API网关 / Spring Security]
+        TRAJ[TRAJ 模块]
+        IAM[IAM 模块]
+        GOV[GOV 资产目录]
+        SCR[SCR 大屏模块]
+    end
+
+    subgraph 数据层
+        PG[(PostgreSQL + PostGIS)]
+    end
+
+    SIM --&gt;|HTTP推送/批量| TRAJ
+    UI --&gt;|REST API| GW
+    GW --&gt; TRAJ
+    TRAJ --&gt; PG
+    MAP --&gt;|瓦片| AMAP[高德瓦片服务]
+    TRAJ -.-&gt;|资产登记| GOV
+    TRAJ -.-&gt;|大屏数据源| SCR
+    IAM -.-&gt;|权限校验| TRAJ
+</code></pre>
+<hr />
+<h2 id="2">2. 模块架构</h2>
+<h3 id="21">2.1 内部分层结构</h3>
+<pre><code class="language-mermaid">graph TD
+    subgraph TRAJ模块
+        subgraph API层
+            CTRL[TrajController]
+            SIMCTRL[TrajSimulatorController]
+        end
+        subgraph Service层
+            INGEST[TrajIngestService]
+            QUERY[TrajQueryService]
+            REPLAY[TrajReplayService]
+            DASH[TrajDashboardService]
+            METRICS[TrajMetricsService]
+            SIMSVC[TrajSimulatorService]
+            EXPORT[TrajExportService]
+        end
+        subgraph Repository层
+            GPSRepo[TrajGpsPointRepository]
+            VRepo[TrajVehicleRepository]
+            TRepo[TrajTerminalRepository]
+            WRepo[TrajWarnInfoRepository]
+            PRepo[TrajGpsPhotoRepository]
+        end
+        subgraph 模拟器 Python
+            GEN[TrajectoryGenerator]
+            PUSHER[DataPusher]
+            BATCHER[BatchImporter]
+            SIMAPI[SimulatorAPI]
+        end
+    end
+
+    CTRL --&gt; QUERY
+    CTRL --&gt; REPLAY
+    CTRL --&gt; DASH
+    CTRL --&gt; METRICS
+    CTRL --&gt; EXPORT
+    SIMCTRL --&gt; SIMSVC
+    INGEST --&gt; GPSRepo
+    QUERY --&gt; GPSRepo
+    REPLAY --&gt; GPSRepo
+    DASH --&gt; GPSRepo
+    METRICS --&gt; GPSRepo
+    SIMSVC --&gt;|HTTP调用| SIMAPI
+    SIMAPI --&gt; GEN
+    SIMAPI --&gt; PUSHER
+    SIMAPI --&gt; BATCHER
+    PUSHER --&gt;|HTTP| INGEST
+    BATCHER --&gt;|HTTP| INGEST
+</code></pre>
+<h3 id="22-api">2.2 对外发布的接口（api 子包清单）</h3>
+<p>TRAJ 模块对外接口定义在 <code>com.mydatama.traj.api</code> 包中：</p>
+<table>
+<thead>
+<tr>
+<th>接口名</th>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TrajQueryFacade</code></td>
+<td><code>queryPoints</code>, <code>queryLatestPositions</code>, <code>queryByBoundingBox</code></td>
+<td>轨迹查询服务</td>
+</tr>
+<tr>
+<td><code>TrajReplayFacade</code></td>
+<td><code>getReplayTrack</code>, <code>getReplaySpeed</code></td>
+<td>轨迹回放服务</td>
+</tr>
+<tr>
+<td><code>TrajDashboardFacade</code></td>
+<td><code>getOverview</code>, <code>getRealtimePositions</code>, <code>getAlarmStats</code></td>
+<td>大屏聚合数据</td>
+</tr>
+<tr>
+<td><code>TrajMetricsFacade</code></td>
+<td><code>calculateDistance</code>, <code>calculateSpeed</code>, <code>detectStops</code></td>
+<td>指标计算</td>
+</tr>
+<tr>
+<td><code>TrajSimulatorFacade</code></td>
+<td><code>start</code>, <code>stop</code>, <code>getStatus</code>, <code>batchImport</code></td>
+<td>模拟器控制</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23">2.3 依赖的其他模块接口</h3>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>依赖接口</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IAM</td>
+<td><code>AuthService.getCurrentUser()</code></td>
+<td>获取当前用户、权限校验</td>
+</tr>
+<tr>
+<td>IAM</td>
+<td><code>AuditService.record()</code></td>
+<td>操作审计</td>
+</tr>
+<tr>
+<td>GOV</td>
+<td><code>AssetCatalogService.registerAsset()</code></td>
+<td>轨迹数据集登记为资产</td>
+</tr>
+<tr>
+<td>SCR</td>
+<td><code>DashboardAggregator.registerSource()</code></td>
+<td>注册大屏数据源</td>
+</tr>
+<tr>
+<td>COM</td>
+<td><code>StorageService</code></td>
+<td>抓拍图片文件存储</td>
+</tr>
+</tbody>
+</table>
+<h3 id="24-archunit">2.4 模块依赖规则（ArchUnit 约束）</h3>
+<pre><code class="language-java">@ArchTest
+static final ArchRule traj_should_not_depend_on_other_implementation =
+    noClasses().that().resideInAPackage(&quot;..traj..&quot;)
+        .should().dependOnClassesThat().resideInAPackage(&quot;..iam.impl..&quot;)
+        .orShould().dependOnClassesThat().resideInAPackage(&quot;..proc.impl..&quot;);
+
+@ArchTest
+static final ArchRule traj_api_should_only_be_accessed_via_facade =
+    classes().that().resideInAPackage(&quot;..traj.api..&quot;)
+        .should().onlyBeAccessed().byClassesThat().resideInAPackage(&quot;..traj..&quot;)
+        .orShould().beAnnotatedWith(RestController.class);
+</code></pre>
+<hr />
+<h2 id="3">3. 核心类与组件设计</h2>
+<h3 id="31-trajectorygenerator">3.1 TrajectoryGenerator（模拟器·轨迹生成器）</h3>
+<ul>
+<li><strong>职责</strong>：根据预设路线与时间参数，生成符合北斗数据格式的轨迹点序列</li>
+<li><strong>语言</strong>：Python（独立 FastAPI 进程）</li>
+<li><strong>接口定义</strong>：</li>
+</ul>
+<pre><code class="language-python">class TrajectoryGenerator:
+    def generate_route(
+        self,
+        vehicle_id: int,
+        route_points: list[tuple[float, float]],  # [(lng, lat), ...] 路线关键点
+        start_time: datetime,
+        duration_hours: int,
+        frequency_hz: float = 1.0,
+        avg_speed_kmh: float = 40.0
+    ) -&gt; Iterator[GpsPoint]:
+        &quot;&quot;&quot;
+        沿路线关键点插值生成轨迹点序列。
+
+        Args:
+            vehicle_id: 车辆ID
+            route_points: 路线关键点经纬度列表
+            start_time: 起始时间
+            duration_hours: 持续时长（小时）
+            frequency_hz: 采样频率（Hz），默认 1Hz
+            avg_speed_kmh: 平均速度（km/h）
+
+        Yields:
+            GpsPoint: 轨迹点数据结构
+        &quot;&quot;&quot;
+</code></pre>
+<ul>
+<li><strong>实现策略</strong>：</li>
+<li>使用线性插值在路线关键点间生成中间点</li>
+<li>速度随机波动（±20% 围绕平均速度）</li>
+<li>模拟红绿灯停车（每 5-10 分钟停留 30-60 秒）</li>
+<li>方向角根据相邻点计算</li>
+<li>海拔使用固定值加小幅随机扰动</li>
+<li><strong>依赖</strong>：无外部依赖（纯算法）</li>
+<li><strong>被依赖</strong>：<code>DataPusher</code>、<code>BatchImporter</code></li>
+</ul>
+<h3 id="32-datapusher">3.2 DataPusher（模拟器·实时推送器）</h3>
+<ul>
+<li><strong>职责</strong>：按指定频率将生成的轨迹点通过 HTTP 推送到 Java 后端</li>
+<li><strong>接口定义</strong>：</li>
+</ul>
+<pre><code class="language-python">class DataPusher:
+    async def start_pushing(
+        self,
+        generator: TrajectoryGenerator,
+        target_url: str,
+        api_key: str,
+        push_interval_ms: int = 1000
+    ) -&gt; None:
+        &quot;&quot;&quot;启动异步推送循环。&quot;&quot;&quot;
+
+    async def stop_pushing(self) -&gt; None:
+        &quot;&quot;&quot;停止推送。&quot;&quot;&quot;
+</code></pre>
+<ul>
+<li><strong>实现策略</strong>：<code>asyncio</code> 异步循环，<code>aiohttp</code> 发送 HTTP POST</li>
+<li><strong>依赖</strong>：<code>TrajectoryGenerator</code>、Java 后端 <code>/api/traj/ingest</code> 接口</li>
+<li><strong>被依赖</strong>：<code>SimulatorAPI</code></li>
+</ul>
+<h3 id="33-trajingestservice">3.3 TrajIngestService（数据接入服务）</h3>
+<ul>
+<li><strong>职责</strong>：接收模拟器推送/批量导入的轨迹点，校验并写入数据库</li>
+<li><strong>接口定义</strong>：</li>
+</ul>
+<pre><code class="language-java">public interface TrajIngestService {
+    /**
+     * 接收单个轨迹点（实时推送模式）。
+     * @param point 轨迹点DTO
+     * @return 入库后的ID
+     */
+    Long ingestPoint(TrajGpsPointDTO point);
+
+    /**
+     * 批量接收轨迹点（批量导入模式）。
+     * @param points 轨迹点列表
+     * @return 入库数量
+     */
+    int ingestBatch(List&lt;TrajGpsPointDTO&gt; points);
+}
+</code></pre>
+<ul>
+<li><strong>实现类</strong>：<code>TrajIngestServiceImpl</code></li>
+<li><strong>实现策略</strong>：</li>
+<li>单点接入：JPA save，PostGIS 几何字段用 <code>ST_SetSRID(ST_MakePoint(lng, lat), 4326)</code> 设置</li>
+<li>批量接入：<code>JdbcTemplate.batchUpdate</code> 提升性能，每批 500 条</li>
+<li>数据校验：经纬度范围（lng: 73-136, lat: 3-54），时间不超前于当前</li>
+<li><strong>依赖</strong>：<code>TrajGpsPointRepository</code></li>
+<li><strong>被依赖</strong>：<code>TrajController</code>、<code>TrajSimulatorService</code></li>
+</ul>
+<h3 id="34-trajqueryservice">3.4 TrajQueryService（轨迹查询服务）</h3>
+<ul>
+<li><strong>职责</strong>：按多维度条件查询轨迹点，支持分页、时间范围、设备/车牌筛选</li>
+<li><strong>接口定义</strong>：</li>
+</ul>
+<pre><code class="language-java">public interface TrajQueryService {
+    /**
+     * 分页查询轨迹点。
+     */
+    Page&lt;TrajGpsPointVO&gt; queryPoints(TrajQueryRequest req, Pageable pageable);
+
+    /**
+     * 查询所有车辆最新位置（大屏实时展示）。
+     */
+    List&lt;TrajLatestPositionVO&gt; queryLatestPositions();
+
+    /**
+     * 按地图视野范围查询车辆。
+     */
+    List&lt;TrajGpsPointVO&gt; queryByBoundingBox(double minLng, double minLat,
+                                            double maxLng, double maxLat);
+}
+</code></pre>
+<ul>
+<li><strong>实现策略</strong>：</li>
+<li>时间范围查询走 <code>idx_traj_gps_point_identity_time</code> 索引</li>
+<li>最新位置查询：<code>SELECT DISTINCT ON (identity_code) ... ORDER BY identity_code, gps_time DESC</code></li>
+<li>视野范围查询：PostGIS <code>ST_Within(location, ST_MakeEnvelope(...))</code> 走 GIST 索引</li>
+<li><strong>依赖</strong>：<code>TrajGpsPointRepository</code></li>
+<li><strong>被依赖</strong>：<code>TrajController</code></li>
+</ul>
+<h3 id="35-trajreplayservice">3.5 TrajReplayService（轨迹回放服务）</h3>
+<ul>
+<li><strong>职责</strong>：提取指定车辆/终端在时间范围内的完整轨迹序列，供前端按时间播放</li>
+<li><strong>接口定义</strong>：</li>
+</ul>
+<pre><code class="language-java">public interface TrajReplayService {
+    /**
+     * 获取回放轨迹数据。
+     * @param identityCode 设备号
+     * @param startTime 起始时间
+     * @param endTime 结束时间
+     * @return 轨迹点序列（按时间升序）
+     */
+    List&lt;TrajReplayPointVO&gt; getReplayTrack(String identityCode,
+                                           LocalDateTime startTime,
+                                           LocalDateTime endTime);
+}
+</code></pre>
+<ul>
+<li><strong>实现策略</strong>：</li>
+<li>一次查询全部轨迹点（时间范围内），按 <code>gps_time ASC</code> 排序</li>
+<li>返回精简字段：<code>gps_time, lng, lat, speed, direction, alarm_flag</code></li>
+<li>若点数超过 5000，按等间隔抽样降至 5000（避免前端渲染压力）</li>
+<li><strong>依赖</strong>：<code>TrajGpsPointRepository</code></li>
+<li><strong>被依赖</strong>：<code>TrajController</code></li>
+</ul>
+<h3 id="36-trajdashboardservice">3.6 TrajDashboardService（大屏聚合服务）</h3>
+<ul>
+<li><strong>职责</strong>：为轨迹总览大屏提供聚合数据</li>
+<li><strong>接口定义</strong>：</li>
+</ul>
+<pre><code class="language-java">public interface TrajDashboardService {
+    /** 总览统计：车辆总数、在线数、今日轨迹点数、报警数 */
+    TrajOverviewVO getOverview();
+
+    /** 实时车辆位置列表 */
+    List&lt;TrajLatestPositionVO&gt; getRealtimePositions();
+
+    /** 报警类型分布 */
+    List&lt;NameValueVO&gt; getAlarmTypeDistribution();
+
+    /** 时段轨迹点分布（24小时） */
+    List&lt;HourlyCountVO&gt; getHourlyDistribution();
+}
+</code></pre>
+<ul>
+<li><strong>实现策略</strong>：聚合查询，结果缓存 10 秒（Caffeine）</li>
+<li><strong>依赖</strong>：<code>TrajGpsPointRepository</code>、<code>TrajVehicleRepository</code>、<code>TrajWarnInfoRepository</code></li>
+<li><strong>被依赖</strong>：<code>TrajController</code>、SCR 大屏模块（跨模块调用）</li>
+</ul>
+<h3 id="37-trajmetricsservice">3.7 TrajMetricsService（指标计算服务）</h3>
+<ul>
+<li><strong>职责</strong>：基于轨迹点序列计算行驶速度、距离、停留点等关键指标</li>
+<li><strong>接口定义</strong>：</li>
+</ul>
+<pre><code class="language-java">public interface TrajMetricsService {
+    /**
+     * 计算轨迹指标。
+     */
+    TrajMetricsVO calculate(String identityCode,
+                            LocalDateTime startTime,
+                            LocalDateTime endTime);
+}
+</code></pre>
+<ul>
+<li><strong>实现策略</strong>：</li>
+<li>总距离：相邻点用 PostGIS <code>ST_DistanceSphere(prev, curr)</code> 累加</li>
+<li>平均速度：距离 / 总时长</li>
+<li>最高速度：<code>MAX(speed)</code></li>
+<li>停留点检测：连续 3 分钟速度 &lt; 5 km/h 的位置聚类</li>
+<li><strong>依赖</strong>：<code>TrajGpsPointRepository</code></li>
+<li><strong>被依赖</strong>：<code>TrajController</code></li>
+</ul>
+<h3 id="38-trajsimulatorservice">3.8 TrajSimulatorService（模拟器控制服务）</h3>
+<ul>
+<li><strong>职责</strong>：通过 HTTP 控制 Python 模拟器的启动/停止/状态查询</li>
+<li><strong>接口定义</strong>：</li>
+</ul>
+<pre><code class="language-java">public interface TrajSimulatorService {
+    /** 启动模拟器 */
+    void start(SimulatorConfigDTO config);
+
+    /** 停止模拟器 */
+    void stop();
+
+    /** 查询模拟器状态 */
+    SimulatorStatusVO getStatus();
+
+    /** 触发批量导入 */
+    BatchImportResultVO batchImport(BatchImportDTO dto);
+}
+</code></pre>
+<ul>
+<li><strong>实现策略</strong>：<code>RestTemplate</code> 调用 Python 模拟器 FastAPI 的控制接口</li>
+<li><strong>依赖</strong>：Python 模拟器 API</li>
+<li><strong>被依赖</strong>：<code>TrajSimulatorController</code></li>
+</ul>
+<hr />
+<h2 id="4">4. 数据模型</h2>
+<h3 id="41">4.1 涉及的表</h3>
+<p>详见 <a href="../ddl/DDL-TRAJ-001-TRAJ-Schema数据库设计.md">DDL-TRAJ-001</a>。</p>
+<table>
+<thead>
+<tr>
+<th>表名</th>
+<th>用途</th>
+<th>读/写</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>traj_gps_point</td>
+<td>轨迹点核心表</td>
+<td>写：IngestService；读：Query/Replay/Dashboard/Metrics</td>
+</tr>
+<tr>
+<td>traj_vehicle</td>
+<td>车辆台账</td>
+<td>写：管理操作；读：Dashboard</td>
+</tr>
+<tr>
+<td>traj_terminal</td>
+<td>终端台账</td>
+<td>写：管理操作；读：Dashboard</td>
+</tr>
+<tr>
+<td>traj_driver</td>
+<td>驾驶员档案</td>
+<td>写：管理操作；读：关联查询</td>
+</tr>
+<tr>
+<td>traj_vehicle_driver</td>
+<td>车辆-司机绑定</td>
+<td>写：管理操作；读：关联查询</td>
+</tr>
+<tr>
+<td>traj_vehicle_terminal</td>
+<td>车辆-终端绑定</td>
+<td>写：管理操作；读：关联查询</td>
+</tr>
+<tr>
+<td>traj_warn_info</td>
+<td>报警信息</td>
+<td>写：IngestService；读：Dashboard</td>
+</tr>
+<tr>
+<td>traj_gps_photo</td>
+<td>抓拍图片元数据</td>
+<td>写：IngestService；读：查询</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42-er">4.2 实体关系（ER 片图）</h3>
+<p>详见 <a href="../ddl/DDL-TRAJ-001-TRAJ-Schema数据库设计.md#5-er-片图">DDL-TRAJ-001 §5 ER 片图</a>。</p>
+<h3 id="43">4.3 读写规则与并发控制</h3>
+<ul>
+<li><strong>写入</strong>：轨迹点纯追加，无更新冲突。批量写入用 <code>JdbcTemplate.batchUpdate</code></li>
+<li><strong>读取</strong>：时间范围 + 设备号走复合索引；空间范围走 GIST 索引</li>
+<li><strong>并发控制</strong>：轨迹点表无锁需求；台账表用乐观锁（<code>update_date</code> 比对）</li>
+<li><strong>缓存</strong>：大屏聚合数据 Caffeine 缓存 10 秒；车辆/终端台账缓存 5 分钟</li>
+</ul>
+<hr />
+<h2 id="5">5. 业务流程</h2>
+<h3 id="51">5.1 模拟数据生成与接入流程</h3>
+<ul>
+<li><strong>触发条件</strong>：用户在大屏点击"启动模拟器"或调用 API</li>
+<li><strong>前置条件</strong>：种子数据已初始化（5辆车+5个终端）</li>
+<li><strong>正常流程</strong>：</li>
+</ul>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant U as 用户
+    participant W as 前端大屏
+    participant J as Java后端
+    participant S as Python模拟器
+    participant DB as PostgreSQL
+
+    U-&gt;&gt;W: 点击&quot;启动模拟器&quot;
+    W-&gt;&gt;J: POST /api/traj/simulator/start
+    J-&gt;&gt;S: POST /sim/start {vehicles:5, duration:8h}
+    S--&gt;&gt;J: 200 {task_id, status:running}
+    J--&gt;&gt;W: 200 {taskId}
+
+    loop 每1秒
+        S-&gt;&gt;S: TrajectoryGenerator生成5个点
+        S-&gt;&gt;J: POST /api/traj/ingest/batch {points:[...]}
+        J-&gt;&gt;DB: INSERT INTO traj_gps_point
+        J--&gt;&gt;S: 200 {count:5}
+    end
+
+    loop 每5秒（大屏轮询）
+        W-&gt;&gt;J: GET /api/traj/dashboard/realtime
+        J-&gt;&gt;DB: SELECT DISTINCT ON (identity_code) ...
+        DB--&gt;&gt;J: 5条最新位置
+        J--&gt;&gt;W: 200 {positions:[...]}
+        W-&gt;&gt;W: Leaflet更新车辆标记
+    end
+</code></pre>
+<ul>
+<li><strong>异常流程</strong>：模拟器不可达 → 返回 503，前端提示"模拟器未启动"</li>
+<li><strong>后置条件</strong>：traj_gps_point 表持续追加轨迹点</li>
+<li><strong>关联用例</strong>：UC-TRAJ-001</li>
+</ul>
+<h3 id="52">5.2 轨迹回放流程</h3>
+<ul>
+<li><strong>触发条件</strong>：用户在查询页选择车辆与时间范围，点击"回放"</li>
+<li><strong>前置条件</strong>：该时间范围内已有轨迹数据</li>
+<li><strong>正常流程</strong>：</li>
+</ul>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant U as 用户
+    participant W as 前端回放页
+    participant J as Java后端
+    participant DB as PostgreSQL
+
+    U-&gt;&gt;W: 选择设备号+时间范围，点击回放
+    W-&gt;&gt;J: GET /api/traj/replay?identityCode=TERM_001&amp;start=...&amp;end=...
+    J-&gt;&gt;DB: SELECT * FROM traj_gps_point WHERE identity_code=? AND gps_time BETWEEN ? AND ? ORDER BY gps_time ASC
+    DB--&gt;&gt;J: 轨迹点序列（可能数千条）
+    J-&gt;&gt;J: 若&gt;5000条则等间隔抽样
+    J--&gt;&gt;W: 200 {points:[{time,lng,lat,speed,...}]}
+    W-&gt;&gt;W: Leaflet绘制轨迹折线
+    W-&gt;&gt;W: 播放控件按1x/2x/4x速度逐点移动车辆图标
+</code></pre>
+<ul>
+<li><strong>异常流程</strong>：无数据 → 返回空列表，前端提示"该时间范围无轨迹数据"</li>
+<li><strong>关联用例</strong>：UC-TRAJ-002</li>
+</ul>
+<h3 id="53">5.3 轨迹查询流程</h3>
+<ul>
+<li><strong>触发条件</strong>：用户在查询页输入筛选条件并搜索</li>
+<li><strong>前置条件</strong>：已有轨迹数据</li>
+<li><strong>正常流程</strong>：前端提交筛选条件 → 后端走复合索引分页查询 → 返回点列表 + 地图标记</li>
+<li><strong>关联用例</strong>：UC-TRAJ-003</li>
+</ul>
+<h3 id="54">5.4 大屏实时展示流程</h3>
+<ul>
+<li><strong>触发条件</strong>：用户打开轨迹总览大屏页面</li>
+<li><strong>前置条件</strong>：模拟器运行中或已有历史数据</li>
+<li><strong>正常流程</strong>：前端每 5 秒轮询 <code>/api/traj/dashboard/realtime</code> → 后端返回最新位置 → Leaflet 更新标记</li>
+<li><strong>关联用例</strong>：UC-TRAJ-004</li>
+</ul>
+<hr />
+<h2 id="6">6. 接口清单</h2>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>路径</th>
+<th>说明</th>
+<th>权限</th>
+<th>详细文档</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td>/api/traj/ingest</td>
+<td>单点接入</td>
+<td>traj:ingest</td>
+<td>API-TRAJ-002</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/api/traj/ingest/batch</td>
+<td>批量接入</td>
+<td>traj:ingest</td>
+<td>API-TRAJ-002</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/traj/query</td>
+<td>分页查询轨迹点</td>
+<td>traj:query</td>
+<td>API-TRAJ-001</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/traj/replay</td>
+<td>获取回放轨迹</td>
+<td>traj:query</td>
+<td>API-TRAJ-001</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/traj/metrics</td>
+<td>获取轨迹指标</td>
+<td>traj:query</td>
+<td>API-TRAJ-001</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/traj/export</td>
+<td>导出轨迹数据</td>
+<td>traj:export</td>
+<td>API-TRAJ-001</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/traj/dashboard/overview</td>
+<td>大屏总览</td>
+<td>traj:view</td>
+<td>API-TRAJ-001</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/traj/dashboard/realtime</td>
+<td>大屏实时位置</td>
+<td>traj:view</td>
+<td>API-TRAJ-001</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/traj/dashboard/alarms</td>
+<td>大屏报警统计</td>
+<td>traj:view</td>
+<td>API-TRAJ-001</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/api/traj/simulator/start</td>
+<td>启动模拟器</td>
+<td>traj:admin</td>
+<td>API-TRAJ-002</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/api/traj/simulator/stop</td>
+<td>停止模拟器</td>
+<td>traj:admin</td>
+<td>API-TRAJ-002</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/traj/simulator/status</td>
+<td>模拟器状态</td>
+<td>traj:view</td>
+<td>API-TRAJ-002</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/api/traj/simulator/batch-import</td>
+<td>批量导入</td>
+<td>traj:admin</td>
+<td>API-TRAJ-002</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7">7. 异常处理</h2>
+<h3 id="71">7.1 模块特有异常</h3>
+<table>
+<thead>
+<tr>
+<th>异常码</th>
+<th>异常消息</th>
+<th>触发条件</th>
+<th>处理策略</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TRAJ_001</td>
+<td>设备号不存在: {identityCode}</td>
+<td>接入的设备号未在 traj_terminal 登记</td>
+<td>拒绝写入，返回 400</td>
+</tr>
+<tr>
+<td>TRAJ_002</td>
+<td>经纬度超出中国范围: lng={lng}, lat={lat}</td>
+<td>接入数据坐标越界</td>
+<td>拒绝写入，返回 400</td>
+</tr>
+<tr>
+<td>TRAJ_003</td>
+<td>GPS时间超前于当前时间</td>
+<td>接入数据时间戳在未来</td>
+<td>拒绝写入，返回 400</td>
+</tr>
+<tr>
+<td>TRAJ_004</td>
+<td>模拟器未启动</td>
+<td>调用 stop/status 时模拟器未运行</td>
+<td>返回 409</td>
+</tr>
+<tr>
+<td>TRAJ_005</td>
+<td>模拟器已运行</td>
+<td>重复调用 start</td>
+<td>返回 409</td>
+</tr>
+<tr>
+<td>TRAJ_006</td>
+<td>查询时间范围超过30天</td>
+<td>查询跨度过大</td>
+<td>返回 400，提示缩小范围</td>
+</tr>
+<tr>
+<td>TRAJ_007</td>
+<td>回放数据量过大(&gt;{limit})</td>
+<td>单次回放超 10 万点</td>
+<td>服务端抽样至 5000 点</td>
+</tr>
+<tr>
+<td>TRAJ_008</td>
+<td>模拟器不可达</td>
+<td>Python 模拟器进程未启动</td>
+<td>返回 503</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72">7.2 降级策略</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>降级策略</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PostGIS 空间查询超时</td>
+<td>降级为 lng/lat 范围比较（B树索引）</td>
+</tr>
+<tr>
+<td>模拟器不可达</td>
+<td>大屏展示历史最新位置，不刷新</td>
+</tr>
+<tr>
+<td>回放数据量过大</td>
+<td>服务端抽样 + 前端分段时间轴加载</td>
+</tr>
+<tr>
+<td>批量导入部分失败</td>
+<td>返回成功/失败计数，失败记录记录到日志</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8">8. 安全设计</h2>
+<h3 id="81">8.1 权限控制点</h3>
+<table>
+<thead>
+<tr>
+<th>接口</th>
+<th>权限码</th>
+<th>角色</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>/api/traj/ingest/*</td>
+<td>traj:ingest</td>
+<td>system（模拟器专用 API Key）</td>
+</tr>
+<tr>
+<td>/api/traj/query</td>
+<td>traj:query</td>
+<td>viewer, operator, admin</td>
+</tr>
+<tr>
+<td>/api/traj/replay</td>
+<td>traj:query</td>
+<td>viewer, operator, admin</td>
+</tr>
+<tr>
+<td>/api/traj/export</td>
+<td>traj:export</td>
+<td>operator, admin</td>
+</tr>
+<tr>
+<td>/api/traj/dashboard/*</td>
+<td>traj:view</td>
+<td>viewer, operator, admin</td>
+</tr>
+<tr>
+<td>/api/traj/simulator/*</td>
+<td>traj:admin</td>
+<td>admin</td>
+</tr>
+</tbody>
+</table>
+<h3 id="82">8.2 数据脱敏点</h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>脱敏规则</th>
+<th>位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>traj_driver.idcard</td>
+<td>中间 8 位星号替换</td>
+<td>写入前（PROC 脱敏引擎）</td>
+</tr>
+<tr>
+<td>traj_driver.contact_phone</td>
+<td>中间 4 位星号替换</td>
+<td>写入前（PROC 脱敏引擎）</td>
+</tr>
+<tr>
+<td>导出数据中的驾驶员信息</td>
+<td>整字段脱敏</td>
+<td>导出时</td>
+</tr>
+</tbody>
+</table>
+<h3 id="83">8.3 审计点</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>审计动作</th>
+<th>审计字段</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>启动/停止模拟器</td>
+<td>SIMULATOR_START / SIMULATOR_STOP</td>
+<td>userId, config, timestamp</td>
+</tr>
+<tr>
+<td>批量导入数据</td>
+<td>TRAJ_BATCH_IMPORT</td>
+<td>userId, count, source</td>
+</tr>
+<tr>
+<td>导出轨迹数据</td>
+<td>TRAJ_EXPORT</td>
+<td>userId, identityCode, timeRange, rowCount</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9">9. 配置项</h2>
+<table>
+<thead>
+<tr>
+<th>配置键</th>
+<th>类型</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>traj.simulator.enabled</td>
+<td>boolean</td>
+<td>true</td>
+<td>是否启用模拟器模块</td>
+</tr>
+<tr>
+<td>traj.simulator.python-url</td>
+<td>string</td>
+<td>http://traj-simulator:8088</td>
+<td>Python 模拟器地址</td>
+</tr>
+<tr>
+<td>traj.simulator.default-vehicles</td>
+<td>int</td>
+<td>5</td>
+<td>默认模拟车辆数</td>
+</tr>
+<tr>
+<td>traj.simulator.default-duration-hours</td>
+<td>int</td>
+<td>8</td>
+<td>默认模拟时长</td>
+</tr>
+<tr>
+<td>traj.simulator.default-frequency-hz</td>
+<td>float</td>
+<td>1.0</td>
+<td>默认采样频率</td>
+</tr>
+<tr>
+<td>traj.ingest.batch-size</td>
+<td>int</td>
+<td>500</td>
+<td>批量接入每批大小</td>
+</tr>
+<tr>
+<td>traj.ingest.max-lng</td>
+<td>double</td>
+<td>136.0</td>
+<td>经度上限（中国）</td>
+</tr>
+<tr>
+<td>traj.ingest.min-lng</td>
+<td>double</td>
+<td>73.0</td>
+<td>经度下限</td>
+</tr>
+<tr>
+<td>traj.ingest.max-lat</td>
+<td>double</td>
+<td>54.0</td>
+<td>纬度上限</td>
+</tr>
+<tr>
+<td>traj.ingest.min-lat</td>
+<td>double</td>
+<td>3.0</td>
+<td>纬度下限</td>
+</tr>
+<tr>
+<td>traj.query.max-days</td>
+<td>int</td>
+<td>30</td>
+<td>查询最大时间跨度（天）</td>
+</tr>
+<tr>
+<td>traj.replay.max-points</td>
+<td>int</td>
+<td>5000</td>
+<td>回放最大返回点数</td>
+</tr>
+<tr>
+<td>traj.replay.sample-threshold</td>
+<td>int</td>
+<td>5000</td>
+<td>触发抽样的点数阈值</td>
+</tr>
+<tr>
+<td>traj.dashboard.cache-ttl-seconds</td>
+<td>int</td>
+<td>10</td>
+<td>大屏聚合缓存时长</td>
+</tr>
+<tr>
+<td>traj.dashboard.polling-interval-ms</td>
+<td>int</td>
+<td>5000</td>
+<td>前端轮询间隔</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10">10. 扩展点</h2>
+<h3 id="101">10.1 轨迹数据源扩展</h3>
+<ul>
+<li><strong>接口</strong>：<code>TrajDataSource</code>（抽象接口）</li>
+<li><strong>现有实现</strong>：<code>SimulatorTrajDataSource</code>（模拟器数据源）</li>
+<li><strong>如何新增实现</strong>：
+  1. 实现 <code>TrajDataSource</code> 接口（如 <code>JT808TcpDataSource</code> 接收真实北斗终端 TCP 推送）
+  2. 在 <code>application.yml</code> 配置 <code>traj.source.type=jt808</code>
+  3. 通过 <code>@ConditionalOnProperty</code> 自动激活新实现</li>
+</ul>
+<h3 id="102">10.2 地图引擎扩展</h3>
+<ul>
+<li><strong>接口</strong>：<code>MapEngine</code>（前端抽象，TypeScript interface）</li>
+<li><strong>现有实现</strong>：<code>LeafletMapEngine</code>（Leaflet + 高德瓦片）</li>
+<li><strong>如何新增实现</strong>：实现 <code>MapEngine</code> 接口（如 <code>AMapMapEngine</code> 使用高德 JS API），替换组件注入</li>
+</ul>
+<h3 id="103">10.3 存储层扩展</h3>
+<ul>
+<li><strong>接口</strong>：<code>TrajStorageService</code>（抽象接口）</li>
+<li><strong>现有实现</strong>：<code>PostgisTrajStorageService</code></li>
+<li><strong>如何新增实现</strong>：未来可扩展 <code>ElasticsearchTrajStorageService</code>（海量轨迹场景）或 <code>S3TrajStorageService</code>（冷数据归档）</li>
+</ul>
+<hr />
+<h2 id="11_1">11. 验收标准</h2>
+<ul>
+<li>[ ] Python 模拟器可独立启动，生成 5 辆车 × 8 小时 × 1Hz 的轨迹数据</li>
+<li>[ ] 模拟器通过 HTTP 推送轨迹点到 Java 后端，数据成功写入 <code>traj_gps_point</code></li>
+<li>[ ] 前端地图可展示所有车辆最新位置，每 5 秒刷新</li>
+<li>[ ] 轨迹回放页可按时间范围播放轨迹，支持 1x/2x/4x 倍速</li>
+<li>[ ] 轨迹查询页支持按设备号/车牌/时间范围筛选，结果在地图标记</li>
+<li>[ ] 大屏展示 4 个统计卡片 + 2 个图表 + 实时位置地图</li>
+<li>[ ] 轨迹指标计算正确：总距离、平均速度、最高速度、停留点</li>
+<li>[ ] PostGIS 空间查询可命中 GIST 索引（EXPLAIN 验证）</li>
+<li>[ ] 权限控制生效：viewer 不能启停模拟器，不能导出数据</li>
+<li>[ ] 审计日志记录模拟器启停、批量导入、数据导出操作</li>
+<li>[ ] 模拟器不可达时大屏降级展示历史最新位置</li>
+<li>[ ] 容器内存增量 ≤ 80MB（PostGIS 50MB + 模拟器 30MB）</li>
+</ul>
+<hr />
+<h2 id="12_1">12. 修订记录</h2>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>日期</th>
+<th>修订人</th>
+<th>修订内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>2026-09-30</td>
+<td>system</td>
+<td>初版：完整模块设计，含 8 个核心组件、4 条业务流程、13 个接口、8 类异常</td>
+</tr>
+</tbody>
+</table>
+  </main>
+</div>
+<script>
+// 移动端：点击目录链接后自动收起抽屉
+document.querySelectorAll('.toc a').forEach(function(a){
+  a.addEventListener('click',function(){document.querySelector('.toc').classList.remove('open');});
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+// 初始化 Mermaid 图表渲染
+if (window.mermaid) {
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  // 将 fenced code block 的 mermaid 代码转换为 mermaid div
+  document.querySelectorAll('pre code.language-mermaid').forEach(function(block) {
+    var pre = block.parentElement;
+    var div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = block.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.run();
+}
+</script>
+</body>
+</html>

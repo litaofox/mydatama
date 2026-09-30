@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UC-TRAJ-001-模拟数据生成与启动</title>
+<style>
+:root{
+  --primary:#1f5fbf; --primary-dark:#174a96; --bg:#f4f6fa; --card:#ffffff;
+  --text:#1f2733; --muted:#667085; --border:#e3e8f0; --code-bg:#1e2530;
+  --accent-bg:#eef4ff; --th-bg:#1f5fbf; --th-text:#fff;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.85;font-size:16px;}
+.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:var(--primary-dark);
+  color:#fff;display:flex;align-items:center;padding:0 20px;z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.topbar .home{color:#fff;text-decoration:none;font-size:14px;opacity:.85;margin-right:18px;white-space:nowrap;}
+.topbar .home:hover{opacity:1;}
+.topbar .title{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.layout{display:flex;max-width:1280px;margin:56px auto 0;}
+.toc{width:260px;flex-shrink:0;padding:24px 0 24px 20px;}
+.toc-inner{position:sticky;top:76px;max-height:calc(100vh - 100px);overflow-y:auto;
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 14px;}
+.toc-inner .toc-title{font-size:13px;font-weight:700;color:var(--muted);
+  letter-spacing:1px;margin:0 0 10px 4px;}
+.toc-inner ul{list-style:none;margin:0;padding:0;}
+.toc-inner ul ul{padding-left:14px;}
+.toc-inner li{margin:3px 0;}
+.toc-inner a{display:block;color:#44506a;text-decoration:none;font-size:13.5px;
+  line-height:1.5;padding:3px 8px;border-radius:6px;border-left:2px solid transparent;}
+.toc-inner a:hover{background:var(--accent-bg);color:var(--primary);}
+.content{flex:1;min-width:0;background:var(--card);margin:20px 24px 60px;padding:40px 52px;
+  border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 1px 4px rgba(16,42,90,.05);}
+h1{font-size:28px;color:var(--primary-dark);border-bottom:3px solid var(--primary);
+  padding-bottom:14px;margin-top:0;}
+h2{font-size:22px;color:var(--primary-dark);margin-top:42px;
+  border-left:5px solid var(--primary);padding-left:12px;}
+h3{font-size:18px;color:#28456e;margin-top:32px;}
+h4{font-size:16px;color:#344054;margin-top:24px;}
+p{margin:14px 0;}
+blockquote{margin:18px 0;padding:12px 18px;background:var(--accent-bg);
+  border-left:4px solid var(--primary);color:#3d4a5c;border-radius:0 8px 8px 0;}
+blockquote p{margin:6px 0;}
+a{color:var(--primary);}
+ul,ol{padding-left:26px;}
+li{margin:5px 0;}
+code{font-family:Consolas,"Courier New",monospace;font-size:13.5px;
+  background:#eef1f6;color:#b02a5e;padding:2px 6px;border-radius:4px;}
+pre{background:var(--code-bg);color:#d7e0ee;border-radius:10px;padding:18px 20px;
+  overflow-x:auto;line-height:1.55;font-size:13.5px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);}
+pre code{background:none;color:inherit;padding:0;font-size:inherit;}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:14.5px;
+  box-shadow:0 1px 3px rgba(16,42,90,.08);border-radius:8px;overflow:hidden;}
+th{background:var(--th-bg);color:var(--th-text);font-weight:600;padding:10px 14px;
+  text-align:left;border:1px solid var(--primary);white-space:nowrap;}
+td{padding:9px 14px;border:1px solid var(--border);vertical-align:top;}
+tbody tr:nth-child(even){background:#f7f9fd;}
+tbody tr:hover{background:var(--accent-bg);}
+hr{border:none;border-top:1px solid var(--border);margin:36px 0;}
+strong{color:#16345f;}
+h1 strong,h2 strong,h3 strong{color:inherit;}
+.toc-btn{display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
+  color:#fff;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer;margin-right:12px;}
+@media (max-width:900px){
+  .toc{display:block;position:fixed;top:56px;left:0;bottom:0;width:280px;z-index:90;
+    padding:16px;background:var(--bg);transform:translateX(-100%);transition:transform .25s;
+    overflow-y:auto;}
+  .toc.open{transform:translateX(0);box-shadow:4px 0 16px rgba(0,0,0,.15);}
+  .toc-btn{display:inline-block;}
+  .content{margin:12px 10px 40px;padding:24px 18px;}
+  .topbar .title{font-size:13px;}
+  table{font-size:13px;display:block;overflow-x:auto;}
+}
+@media print{
+  .topbar,.toc{display:none;}
+  .layout{margin:0;}
+  .content{border:none;box-shadow:none;margin:0;padding:0;}
+  pre,table,blockquote{break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="toc-btn" onclick="document.querySelector('.toc').classList.toggle('open')">☰ 目录</button>
+  <a class="home" href="index.html">← 文档首页</a>
+  <span class="title">UC-TRAJ-001-模拟数据生成与启动</span>
+</div>
+<div class="layout">
+  <aside class="toc"><div class="toc-inner">
+    <p class="toc-title">目录导航</p>
+    
+<ul>
+<li><a href="#uc-traj-001">UC-TRAJ-001 模拟数据生成与启动</a><ul>
+<li><a href="#1">1. 用例概述</a><ul>
+<li><a href="#11">1.1 用例名称</a></li>
+<li><a href="#12">1.2 参与者（角色）</a></li>
+<li><a href="#13">1.3 前置条件</a></li>
+<li><a href="#14">1.4 后置条件（成功）</a></li>
+<li><a href="#15">1.5 后置条件（失败）</a></li>
+</ul>
+</li>
+<li><a href="#2">2. 主流程</a><ul>
+<li><a href="#21">2.1 流程步骤</a></li>
+<li><a href="#22">2.2 流程图</a></li>
+<li><a href="#23">2.3 时序图</a></li>
+</ul>
+</li>
+<li><a href="#3">3. 备选流程</a><ul>
+<li><a href="#31">3.1 自定义模拟参数</a></li>
+<li><a href="#32">3.2 批量导入历史数据</a></li>
+</ul>
+</li>
+<li><a href="#4">4. 异常流程</a><ul>
+<li><a href="#41">4.1 模拟器容器未启动</a></li>
+<li><a href="#42">4.2 模拟器已运行</a></li>
+<li><a href="#43">4.3 轨迹点坐标越界</a></li>
+<li><a href="#44">4.4 数据库写入失败</a></li>
+</ul>
+</li>
+<li><a href="#5">5. 业务规则</a></li>
+<li><a href="#6">6. 界面设计</a><ul>
+<li><a href="#61">6.1 页面布局描述</a></li>
+<li><a href="#62">6.2 交互说明</a></li>
+<li><a href="#63">6.3 权限要求</a></li>
+</ul>
+</li>
+<li><a href="#7">7. 接口调用</a></li>
+<li><a href="#8">8. 数据变更</a></li>
+<li><a href="#9">9. 测试要点</a></li>
+<li><a href="#10">10. 修订记录</a></li>
+</ul>
+</li>
+</ul>
+
+  </div></aside>
+  <main class="content">
+<h1 id="uc-traj-001">UC-TRAJ-001 模拟数据生成与启动</h1>
+<blockquote>
+<p>版本：v1.0 ｜ 日期：2026-09-30
+所属模块：TRAJ
+关联文档：MOD-TRAJ-001, API-TRAJ-002, DDL-TRAJ-001</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 用例概述</h2>
+<h3 id="11">1.1 用例名称</h3>
+<p>模拟数据生成与启动</p>
+<h3 id="12">1.2 参与者（角色）</h3>
+<table>
+<thead>
+<tr>
+<th>角色</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>系统管理员（admin）</td>
+<td>启动/停止模拟器、配置模拟参数</td>
+</tr>
+<tr>
+<td>Python 模拟器（system）</td>
+<td>自动生成轨迹数据并推送至后端</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13">1.3 前置条件</h3>
+<ol>
+<li>用户已登录系统并具备 <code>traj:admin</code> 权限</li>
+<li>Python 模拟器容器已启动且网络可达</li>
+<li>种子数据已初始化（5 辆车 + 5 个终端 + 5 名驾驶员，见 DDL-TRAJ-001 §4.1）</li>
+<li>PostgreSQL + PostGIS 扩展已启用</li>
+</ol>
+<h3 id="14">1.4 后置条件（成功）</h3>
+<ul>
+<li>Python 模拟器开始按 1Hz 频率生成 5 辆车的轨迹点</li>
+<li>轨迹点实时写入 <code>traj_gps_point</code> 表</li>
+<li>模拟器状态变为 <code>running</code></li>
+<li>审计日志记录 <code>SIMULATOR_START</code> 事件</li>
+</ul>
+<h3 id="15">1.5 后置条件（失败）</h3>
+<ul>
+<li>模拟器未启动，无数据写入</li>
+<li>前端显示错误提示</li>
+<li>审计日志记录启动失败</li>
+</ul>
+<hr />
+<h2 id="2">2. 主流程</h2>
+<h3 id="21">2.1 流程步骤</h3>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>执行者</th>
+<th>动作</th>
+<th>系统响应</th>
+<th>数据变更</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>管理员</td>
+<td>在大屏控制面板点击"启动模拟器"按钮</td>
+<td>弹出参数配置弹窗</td>
+<td>—</td>
+</tr>
+<tr>
+<td>2</td>
+<td>管理员</td>
+<td>确认默认参数（5车/8小时/1Hz），点击确认</td>
+<td>前端发送 POST /api/traj/simulator/start</td>
+<td>—</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Java后端</td>
+<td>校验权限 + 模拟器当前状态</td>
+<td>若已运行返回 409</td>
+<td>—</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Java后端</td>
+<td>转发请求至 Python 模拟器 /sim/start</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Python模拟器</td>
+<td>初始化 5 个 TrajectoryGenerator 实例</td>
+<td>为每辆车分配路线</td>
+<td>—</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Python模拟器</td>
+<td>返回 {task_id, status:running}</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Java后端</td>
+<td>记录审计日志，返回 200</td>
+<td>—</td>
+<td>iam_audit_log 新增一条</td>
+</tr>
+<tr>
+<td>8</td>
+<td>前端</td>
+<td>显示"模拟器运行中"状态指示</td>
+<td>开始轮询实时位置</td>
+<td>—</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Python模拟器</td>
+<td>每秒生成 5 个轨迹点</td>
+<td>POST /api/traj/ingest/batch</td>
+<td>traj_gps_point +5 行/秒</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Java后端</td>
+<td>校验并批量写入数据库</td>
+<td>返回 200 {count:5}</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22">2.2 流程图</h3>
+<pre><code class="language-mermaid">flowchart TD
+    A[管理员点击启动] --&gt; B{模拟器已运行?}
+    B -- 是 --&gt; X1[返回409 已运行]
+    B -- 否 --&gt; C[转发至Python模拟器]
+    C --&gt; D{模拟器可达?}
+    D -- 否 --&gt; X2[返回503 不可达]
+    D -- 是 --&gt; E[初始化5个生成器]
+    E --&gt; F[分配路线与参数]
+    F --&gt; G[启动异步推送循环]
+    G --&gt; H[返回 task_id]
+    H --&gt; I[审计日志记录]
+    I --&gt; J[前端显示运行中]
+    J --&gt; K[开始轮询实时位置]
+</code></pre>
+<h3 id="23">2.3 时序图</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant U as 管理员
+    participant W as 前端大屏
+    participant J as Java后端
+    participant S as Python模拟器
+    participant DB as PostgreSQL
+    participant A as 审计服务
+
+    U-&gt;&gt;W: 点击&quot;启动模拟器&quot;
+    W-&gt;&gt;W: 弹出参数配置弹窗
+    U-&gt;&gt;W: 确认参数（5车/8h/1Hz）
+    W-&gt;&gt;J: POST /api/traj/simulator/start
+    J-&gt;&gt;J: 校验权限 traj:admin
+    J-&gt;&gt;S: POST /sim/start {vehicles:5, duration:8h, freq:1}
+    S-&gt;&gt;S: 初始化5个TrajectoryGenerator
+    S-&gt;&gt;S: 为每辆车分配路线（北京五环内）
+    S--&gt;&gt;J: 200 {task_id:&quot;sim-001&quot;, status:&quot;running&quot;}
+    J-&gt;&gt;A: record(SIMULATOR_START, userId, config)
+    A-&gt;&gt;DB: INSERT INTO iam_audit_log
+    J--&gt;&gt;W: 200 {taskId:&quot;sim-001&quot;}
+
+    loop 每秒
+        S-&gt;&gt;S: 生成5个GpsPoint
+        S-&gt;&gt;J: POST /api/traj/ingest/batch {points:[...]}
+        J-&gt;&gt;J: 校验经纬度+时间
+        J-&gt;&gt;DB: INSERT INTO traj_gps_point (batch)
+        J--&gt;&gt;S: 200 {count:5}
+    end
+</code></pre>
+<hr />
+<h2 id="3">3. 备选流程</h2>
+<h3 id="31">3.1 自定义模拟参数</h3>
+<ul>
+<li><strong>触发条件</strong>：管理员在参数弹窗中修改默认值</li>
+<li><strong>处理步骤</strong>：
+  1. 修改车辆数（1-20）、时长（1-24小时）、频率（0.5-5Hz）、平均速度（20-80 km/h）
+  2. 提交后模拟器按新参数运行
+  3. 车辆数超过种子数据时，自动生成额外虚拟车辆</li>
+</ul>
+<h3 id="32">3.2 批量导入历史数据</h3>
+<ul>
+<li><strong>触发条件</strong>：管理员选择"批量导入"而非"实时推送"</li>
+<li><strong>处理步骤</strong>：
+  1. 模拟器一次性生成完整时段轨迹数据（如 8 小时 × 5 车 = 14.4 万点）
+  2. 分批推送至后端（每批 500 条）
+  3. 全部写入后返回汇总结果
+  4. 大屏可立即查询回放，无需等待实时生成</li>
+</ul>
+<hr />
+<h2 id="4">4. 异常流程</h2>
+<h3 id="41">4.1 模拟器容器未启动</h3>
+<table>
+<thead>
+<tr>
+<th>触发条件</th>
+<th>系统行为</th>
+<th>用户可见结果</th>
+<th>错误码</th>
+<th>数据回滚</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python 模拟器网络不可达</td>
+<td>Java 后端捕获 ConnectException</td>
+<td>"模拟器服务不可达，请检查容器状态"</td>
+<td>TRAJ_008 / 503</td>
+<td>无数据写入</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42">4.2 模拟器已运行</h3>
+<table>
+<thead>
+<tr>
+<th>触发条件</th>
+<th>系统行为</th>
+<th>用户可见结果</th>
+<th>错误码</th>
+<th>数据回滚</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>重复调用 start</td>
+<td>后端检查状态返回 409</td>
+<td>"模拟器已运行，请先停止"</td>
+<td>TRAJ_005 / 409</td>
+<td>无影响</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43">4.3 轨迹点坐标越界</h3>
+<table>
+<thead>
+<tr>
+<th>触发条件</th>
+<th>系统行为</th>
+<th>用户可见结果</th>
+<th>错误码</th>
+<th>数据回滚</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>生成的 lng/lat 超出中国范围</td>
+<td>IngestService 拒绝该点</td>
+<td>模拟器日志记录跳过</td>
+<td>TRAJ_002 / 400</td>
+<td>该点不写入</td>
+</tr>
+</tbody>
+</table>
+<h3 id="44">4.4 数据库写入失败</h3>
+<table>
+<thead>
+<tr>
+<th>触发条件</th>
+<th>系统行为</th>
+<th>用户可见结果</th>
+<th>错误码</th>
+<th>数据回滚</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PostgreSQL 连接异常</td>
+<td>批量写入抛出异常</td>
+<td>模拟器重试 3 次后记录失败</td>
+<td>500</td>
+<td>事务回滚，该批数据不入库</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5">5. 业务规则</h2>
+<table>
+<thead>
+<tr>
+<th>规则编号</th>
+<th>规则描述</th>
+<th>约束值/公式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TRAJ-R-001</td>
+<td>模拟车辆数上限</td>
+<td>20 辆（避免演示资源过载）</td>
+</tr>
+<tr>
+<td>TRAJ-R-002</td>
+<td>模拟时长上限</td>
+<td>24 小时</td>
+</tr>
+<tr>
+<td>TRAJ-R-003</td>
+<td>采样频率上限</td>
+<td>5 Hz（每秒 5 点）</td>
+</tr>
+<tr>
+<td>TRAJ-R-004</td>
+<td>经度范围</td>
+<td>73.0 ≤ lng ≤ 136.0</td>
+</tr>
+<tr>
+<td>TRAJ-R-005</td>
+<td>纬度范围</td>
+<td>3.0 ≤ lat ≤ 54.0</td>
+</tr>
+<tr>
+<td>TRAJ-R-006</td>
+<td>GPS 时间不得超前当前时间</td>
+<td>gps_time ≤ now()</td>
+</tr>
+<tr>
+<td>TRAJ-R-007</td>
+<td>速度随机波动范围</td>
+<td>avgSpeed × (0.8 ~ 1.2)</td>
+</tr>
+<tr>
+<td>TRAJ-R-008</td>
+<td>模拟停车间隔</td>
+<td>每 5-10 分钟停留 30-60 秒</td>
+</tr>
+<tr>
+<td>TRAJ-R-009</td>
+<td>批量写入每批大小</td>
+<td>500 条</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6">6. 界面设计</h2>
+<h3 id="61">6.1 页面布局描述</h3>
+<p>启动入口位于"轨迹总览大屏"右上角控制面板：</p>
+<pre><code>┌─────────────────────────────────────────┐
+│  轨迹总览大屏          [模拟器: 已停止▼] │
+├─────────────────────────────────────────┤
+│                                         │
+│         [Leaflet 地图区域]               │
+│                                         │
+├─────────────────────────────────────────┤
+│  统计卡片1 | 统计卡片2 | 统计卡片3       │
+└─────────────────────────────────────────┘
+</code></pre>
+<p>点击"模拟器"下拉按钮弹出配置弹窗：</p>
+<pre><code>┌───────────────────────────────┐
+│  启动轨迹模拟器               │
+├───────────────────────────────┤
+│  模拟车辆数:  [5    ] 辆      │
+│  模拟时长:    [8    ] 小时    │
+│  采样频率:    [1.0  ] Hz      │
+│  平均速度:    [40   ] km/h    │
+│  推送模式:    (●)实时推送     │
+│              ( )批量导入      │
+├───────────────────────────────┤
+│           [取消]  [启动]      │
+└───────────────────────────────┘
+</code></pre>
+<h3 id="62">6.2 交互说明</h3>
+<ul>
+<li>模拟器运行中时，下拉按钮显示"模拟器: 运行中"（绿色），点击可弹出"停止"操作</li>
+<li>启动成功后自动关闭弹窗，大屏开始轮询实时位置</li>
+<li>启动失败时弹窗不关闭，顶部显示红色错误提示</li>
+</ul>
+<h3 id="63">6.3 权限要求</h3>
+<ul>
+<li>启动/停止操作：<code>traj:admin</code>（仅 admin 角色）</li>
+<li>查看运行状态：<code>traj:view</code>（所有角色）</li>
+</ul>
+<hr />
+<h2 id="7">7. 接口调用</h2>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>接口</th>
+<th>方法</th>
+<th>请求摘要</th>
+<th>响应摘要</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>/api/traj/simulator/start</td>
+<td>POST</td>
+<td>{vehicles:5, durationHours:8, frequencyHz:1.0, avgSpeedKmh:40, mode:"realtime"}</td>
+<td>{taskId, status:"running"}</td>
+</tr>
+<tr>
+<td>9</td>
+<td>/api/traj/ingest/batch</td>
+<td>POST</td>
+<td>{points:[{identityCode, plateNo, gpsTime, lng, lat, speed, direction, altitude}]}</td>
+<td>{count:5}</td>
+</tr>
+<tr>
+<td>8</td>
+<td>/api/traj/simulator/status</td>
+<td>GET</td>
+<td>—</td>
+<td>{status:"running", vehicles:5, pointsGenerated:120, uptime:"00:02:00"}</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8">8. 数据变更</h2>
+<table>
+<thead>
+<tr>
+<th>表</th>
+<th>操作</th>
+<th>字段变更说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>traj_gps_point</td>
+<td>INSERT</td>
+<td>每秒新增 5 行（5 辆车各一个轨迹点）</td>
+</tr>
+<tr>
+<td>iam_audit_log</td>
+<td>INSERT</td>
+<td>启动时记录 SIMULATOR_START 事件</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9">9. 测试要点</h2>
+<table>
+<thead>
+<tr>
+<th>测试场景</th>
+<th>预期结果</th>
+<th>测试数据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>启动模拟器（默认参数）</td>
+<td>状态变 running，1 秒后 traj_gps_point 有 5 条新数据</td>
+<td>默认配置</td>
+</tr>
+<tr>
+<td>重复启动</td>
+<td>返回 409，原模拟器不受影响</td>
+<td>已运行的模拟器</td>
+</tr>
+<tr>
+<td>模拟器容器停止后启动</td>
+<td>返回 503</td>
+<td>停止 Python 容器</td>
+</tr>
+<tr>
+<td>坐标越界数据</td>
+<td>该点被拒绝，其他点正常写入</td>
+<td>lng=200</td>
+</tr>
+<tr>
+<td>GPS 时间超前</td>
+<td>该点被拒绝</td>
+<td>gps_time=明天</td>
+</tr>
+<tr>
+<td>批量导入模式</td>
+<td>8 小时数据在 30 秒内全部入库</td>
+<td>14.4 万点</td>
+</tr>
+<tr>
+<td>停止模拟器</td>
+<td>状态变 stopped，不再有新数据写入</td>
+<td>运行中状态</td>
+</tr>
+<tr>
+<td>权限不足的 viewer 启动</td>
+<td>返回 403</td>
+<td>viewer 角色</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10">10. 修订记录</h2>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>日期</th>
+<th>修订人</th>
+<th>修订内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>2026-09-30</td>
+<td>system</td>
+<td>初版</td>
+</tr>
+</tbody>
+</table>
+  </main>
+</div>
+<script>
+// 移动端：点击目录链接后自动收起抽屉
+document.querySelectorAll('.toc a').forEach(function(a){
+  a.addEventListener('click',function(){document.querySelector('.toc').classList.remove('open');});
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+// 初始化 Mermaid 图表渲染
+if (window.mermaid) {
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  // 将 fenced code block 的 mermaid 代码转换为 mermaid div
+  document.querySelectorAll('pre code.language-mermaid').forEach(function(block) {
+    var pre = block.parentElement;
+    var div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = block.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.run();
+}
+</script>
+</body>
+</html>
