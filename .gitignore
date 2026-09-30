@@ -2,6 +2,8 @@
 tools/DockerDesktopInstaller.exe
 tools/dataease_2.10.26_win_amd64.zip
 tools/DataEase/
+# 保留文档转换等可复用脚本
+!tools/md2html.py
 
 # 排除临时/系统文件
 *.tmp
