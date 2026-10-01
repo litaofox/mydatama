@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS proc.data_files (
     file_name      varchar(255)  NOT NULL,
     modality       varchar(20)   NOT NULL,
     format         varchar(20)   NOT NULL,
-    raw_path       varchar(512)  NOT NULL,
+    raw_path       varchar(512),  -- 上传事务先建行后落盘 UPDATE，须可空（与 processed_path 一致）
     processed_path varchar(512),
     thumb_path     varchar(512),
     size_bytes     bigint        NOT NULL DEFAULT 0,

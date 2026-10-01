@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mydatama.common.api.ErrorCode;
 import com.mydatama.common.exception.BizException;
+import com.mydatama.common.security.UserContext;
 import com.mydatama.common.util.CodecUtil;
 import com.mydatama.ds.api.DsApi;
 import com.mydatama.ds.entity.DatasetItem;
@@ -81,6 +82,8 @@ public class ComplianceEngine {
             check.setPassed(r.passed ? 1 : 0);
             check.setDetail(r.detail);
             check.setRunAt(runAt);
+            // compliance_checks.create_by 为 NOT NULL，该实体不继承 BaseEntity，需手动填充
+            check.setCreateBy(UserContext.get() == null ? "system" : UserContext.get().getUsername());
             complianceCheckMapper.insert(check);
             allPassed &= r.passed;
         }
