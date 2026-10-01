@@ -619,7 +619,7 @@ Compose 调整（ADR-007-01）：platform-app 增加 `mydatama-data:/data` 挂�
 | IAM/PROC/GOV/DS | 依赖 | DDL-IAM/PROC/GOV/DS-001 | init SQL 照抄其 DDL；PROD 经 api 子包消费 |
 | PROD 模块细化 | 下游展开 | MOD-PROD-001, API-PROD-001~003, UC-PROD-001~006（待编写） | 以本文 §3.2~3.5 为基线展开 |
 | MVP 方案 | 上游输入 | 05-MVP功能演示开发工作方案 | 本文是其工程化落地设计 |
-| 部署文档 | 下游执行 | 02-部署文档与演示指南 | init 序表以本文 §3.10 为准 |
+| 部署文档 | 下游执行 | 02-部署文档与演示指南-V0.1 | init 序表以本文 §3.10 为准 |
 
 ---
 

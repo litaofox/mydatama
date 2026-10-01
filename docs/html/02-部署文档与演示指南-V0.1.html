@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>部署文档与演示指南-V0.1</title>
+<style>
+:root{
+  --primary:#1f5fbf; --primary-dark:#174a96; --bg:#f4f6fa; --card:#ffffff;
+  --text:#1f2733; --muted:#667085; --border:#e3e8f0; --code-bg:#1e2530;
+  --accent-bg:#eef4ff; --th-bg:#1f5fbf; --th-text:#fff;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.85;font-size:16px;}
+.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:var(--primary-dark);
+  color:#fff;display:flex;align-items:center;padding:0 20px;z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.topbar .home{color:#fff;text-decoration:none;font-size:14px;opacity:.85;margin-right:18px;white-space:nowrap;}
+.topbar .home:hover{opacity:1;}
+.topbar .title{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.layout{display:flex;max-width:1280px;margin:56px auto 0;}
+.toc{width:260px;flex-shrink:0;padding:24px 0 24px 20px;}
+.toc-inner{position:sticky;top:76px;max-height:calc(100vh - 100px);overflow-y:auto;
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 14px;}
+.toc-inner .toc-title{font-size:13px;font-weight:700;color:var(--muted);
+  letter-spacing:1px;margin:0 0 10px 4px;}
+.toc-inner ul{list-style:none;margin:0;padding:0;}
+.toc-inner ul ul{padding-left:14px;}
+.toc-inner li{margin:3px 0;}
+.toc-inner a{display:block;color:#44506a;text-decoration:none;font-size:13.5px;
+  line-height:1.5;padding:3px 8px;border-radius:6px;border-left:2px solid transparent;}
+.toc-inner a:hover{background:var(--accent-bg);color:var(--primary);}
+.content{flex:1;min-width:0;background:var(--card);margin:20px 24px 60px;padding:40px 52px;
+  border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 1px 4px rgba(16,42,90,.05);}
+h1{font-size:28px;color:var(--primary-dark);border-bottom:3px solid var(--primary);
+  padding-bottom:14px;margin-top:0;}
+h2{font-size:22px;color:var(--primary-dark);margin-top:42px;
+  border-left:5px solid var(--primary);padding-left:12px;}
+h3{font-size:18px;color:#28456e;margin-top:32px;}
+h4{font-size:16px;color:#344054;margin-top:24px;}
+p{margin:14px 0;}
+blockquote{margin:18px 0;padding:12px 18px;background:var(--accent-bg);
+  border-left:4px solid var(--primary);color:#3d4a5c;border-radius:0 8px 8px 0;}
+blockquote p{margin:6px 0;}
+a{color:var(--primary);}
+ul,ol{padding-left:26px;}
+li{margin:5px 0;}
+code{font-family:Consolas,"Courier New",monospace;font-size:13.5px;
+  background:#eef1f6;color:#b02a5e;padding:2px 6px;border-radius:4px;}
+pre{background:var(--code-bg);color:#d7e0ee;border-radius:10px;padding:18px 20px;
+  overflow-x:auto;line-height:1.55;font-size:13.5px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);}
+pre code{background:none;color:inherit;padding:0;font-size:inherit;}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:14.5px;
+  box-shadow:0 1px 3px rgba(16,42,90,.08);border-radius:8px;overflow:hidden;}
+th{background:var(--th-bg);color:var(--th-text);font-weight:600;padding:10px 14px;
+  text-align:left;border:1px solid var(--primary);white-space:nowrap;}
+td{padding:9px 14px;border:1px solid var(--border);vertical-align:top;}
+tbody tr:nth-child(even){background:#f7f9fd;}
+tbody tr:hover{background:var(--accent-bg);}
+hr{border:none;border-top:1px solid var(--border);margin:36px 0;}
+strong{color:#16345f;}
+h1 strong,h2 strong,h3 strong{color:inherit;}
+.toc-btn{display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
+  color:#fff;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer;margin-right:12px;}
+@media (max-width:900px){
+  .toc{display:block;position:fixed;top:56px;left:0;bottom:0;width:280px;z-index:90;
+    padding:16px;background:var(--bg);transform:translateX(-100%);transition:transform .25s;
+    overflow-y:auto;}
+  .toc.open{transform:translateX(0);box-shadow:4px 0 16px rgba(0,0,0,.15);}
+  .toc-btn{display:inline-block;}
+  .content{margin:12px 10px 40px;padding:24px 18px;}
+  .topbar .title{font-size:13px;}
+  table{font-size:13px;display:block;overflow-x:auto;}
+}
+@media print{
+  .topbar,.toc{display:none;}
+  .layout{margin:0;}
+  .content{border:none;box-shadow:none;margin:0;padding:0;}
+  pre,table,blockquote{break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="toc-btn" onclick="document.querySelector('.toc').classList.toggle('open')">☰ 目录</button>
+  <a class="home" href="index.html">← 文档首页</a>
+  <span class="title">部署文档与演示指南-V0.1</span>
+</div>
+<div class="layout">
+  <aside class="toc"><div class="toc-inner">
+    <p class="toc-title">目录导航</p>
+    
+<ul>
+<li><a href="#mvp-v01">企业级多模态数据中台 MVP — 部署文档与演示指南（V0.1）</a><ul>
+<li><a href="#1">1. 部署总览</a><ul>
+<li><a href="#11">1.1 端口规划</a></li>
+<li><a href="#12">1.2 数据卷</a></li>
+</ul>
+</li>
+<li><a href="#2">2. 环境准备</a><ul>
+<li><a href="#21">2.1 机器要求（实测预算）</a></li>
+<li><a href="#22-envexample-env">2.2 环境变量（.env.example → .env）</a></li>
+<li><a href="#23">2.3 国内网络说明（首次构建）</a></li>
+</ul>
+</li>
+<li><a href="#3">3. 一键部署</a></li>
+<li><a href="#4">4. 启动顺序与健康检查</a><ul>
+<li><a href="#41">4.1 预置账号</a></li>
+<li><a href="#42">4.2 预置产品模板</a></li>
+</ul>
+</li>
+<li><a href="#5-15-1520">5. 演示指南：标准 15 步动线（15–20 分钟）</a><ul>
+<li><a href="#51-2">5.1 演示前准备（2 分钟）</a></li>
+<li><a href="#52-t01t10">5.2 一键冒烟（接口级 T01~T10）</a></li>
+</ul>
+</li>
+<li><a href="#6">6. 备份与恢复</a></li>
+<li><a href="#7">7. 离线/内网部署</a></li>
+<li><a href="#8">8. 常见问题</a></li>
+<li><a href="#9-v01">9. 生产化提示（超出 V0.1）</a></li>
+</ul>
+</li>
+</ul>
+
+  </div></aside>
+  <main class="content">
+<h1 id="mvp-v01">企业级多模态数据中台 MVP — 部署文档与演示指南（V0.1）</h1>
+<blockquote>
+<p>版本：<strong>V0.1</strong>（对应代码标签 <code>v0.1.0</code>）　日期：2026-10-01
+功能基线：<a href="./design/sys/SYS-007-MVP功能演示详细设计.md">SYS-007-MVP功能演示详细设计</a>
+架构定位：<strong>4 个容器、1 个数据库（五 schema）、整机 ≤ 8GB 内存</strong>，一条命令完成「数据治理 → 产品生成」全链路演示。</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 部署总览</h2>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>启动命令</td>
+<td><code>docker compose up -d --build</code></td>
+</tr>
+<tr>
+<td>容器数</td>
+<td>4</td>
+</tr>
+<tr>
+<td>容器内存预算</td>
+<td>≤ 2.5GB（postgres 1G + platform-app 768M + processing-app 384M + nginx 64M）</td>
+</tr>
+<tr>
+<td>演示入口</td>
+<td><strong>http://localhost:8090</strong>（唯一对外端口）</td>
+</tr>
+<tr>
+<td>演示时长</td>
+<td>标准脚本 15–20 分钟，共 15 步（见 §5）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>core 档 4 个容器</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>容器</th>
+<th>镜像/构建</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>postgres</code></td>
+<td><code>postgis/postgis:16-3.4</code></td>
+<td>唯一基础设施，五 schema：<code>iam / proc / gov / ds / prod</code></td>
+</tr>
+<tr>
+<td><code>platform-app</code></td>
+<td>本地构建（<code>eclipse-temurin:21-jre</code>）</td>
+<td>Spring Boot 单体：IAM 认证权限、GOV 资产血缘、DS 数据集、PROD 产品加工、SCR 大屏聚合、开放 API</td>
+</tr>
+<tr>
+<td><code>processing-app</code></td>
+<td>本地构建（<code>python:3.12-slim</code> + ffmpeg）</td>
+<td>FastAPI：文件上传与五阶段治理流水线（2 worker 线程）</td>
+</tr>
+<tr>
+<td><code>portal-nginx</code></td>
+<td><code>nginx:1.27-alpine</code></td>
+<td>静态前端门户 + API 路径分发</td>
+</tr>
+</tbody>
+</table>
+<h3 id="11">1.1 端口规划</h3>
+<table>
+<thead>
+<tr>
+<th>端口</th>
+<th>容器</th>
+<th>用途</th>
+<th>对外</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>8090</strong></td>
+<td>portal-nginx</td>
+<td><strong>唯一演示入口</strong>：门户页面 + 全部 API 分发</td>
+<td>是（0.0.0.0）</td>
+</tr>
+<tr>
+<td>5432</td>
+<td>postgres</td>
+<td>数据库，仅排错时用</td>
+<td>仅 127.0.0.1</td>
+</tr>
+<tr>
+<td>8080</td>
+<td>platform-app</td>
+<td>Java 服务，仅排错时用</td>
+<td>仅 127.0.0.1</td>
+</tr>
+<tr>
+<td>8000</td>
+<td>processing-app</td>
+<td>Python 服务，仅排错时用</td>
+<td>仅 127.0.0.1</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 数据卷</h3>
+<table>
+<thead>
+<tr>
+<th>卷</th>
+<th>挂载点</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mydatama_pg-data</code></td>
+<td>postgres <code>/var/lib/postgresql/data</code></td>
+<td>全量业务数据（五 schema）</td>
+</tr>
+<tr>
+<td><code>mydatama_mydatama-data</code></td>
+<td>platform-app / processing-app 的 <code>/data</code></td>
+<td>raw / processed / thumb / products 四类文件，两个服务共享</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2">2. 环境准备</h2>
+<h3 id="21">2.1 机器要求（实测预算）</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>最低</th>
+<th>推荐</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU</td>
+<td>4 核</td>
+<td>4 核以上</td>
+</tr>
+<tr>
+<td>内存</td>
+<td><strong>8GB</strong></td>
+<td>8–16GB</td>
+</tr>
+<tr>
+<td>磁盘</td>
+<td>20GB 可用（镜像 ≈3GB + 数据）</td>
+<td>40GB SSD</td>
+</tr>
+<tr>
+<td>系统</td>
+<td>Windows 10/11 + Docker Desktop / macOS 12+ / Ubuntu 22.04</td>
+<td></td>
+</tr>
+<tr>
+<td>软件</td>
+<td>Docker Desktop 4.30+（含 Compose v2）、Chrome/Edge</td>
+<td></td>
+</tr>
+<tr>
+<td>浏览器</td>
+<td>开启 JavaScript；演示前 <strong>Ctrl+F5</strong> 强制刷新一次</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-envexample-env">2.2 环境变量（<code>.env.example</code> → <code>.env</code>）</h3>
+<pre><code class="language-ini"># ===== 数据库 =====
+POSTGRES_DB=mydatama
+DB_USER=mydatama
+DB_PASSWORD=change_me_in_prod
+
+# ===== JWT 与服务令牌（生产请用 openssl rand -hex 32 生成） =====
+JWT_HMAC_SECRET=change_me_to_32_bytes_min_length_secret_value_here
+SERVICE_TOKEN=change_me_service_token_for_internal_api_calls
+
+# ===== Java 应用 =====
+JAVA_OPTS=-Xmx640m -XX:+UseG1GC
+
+# ===== Python 处理服务 =====
+WORKER_THREADS=2
+POLL_INTERVAL=2
+JOB_LOCK_TIMEOUT_MINUTES=10
+</code></pre>
+<blockquote>
+<p>Java 与 Python 共用同一把 <code>JWT_HMAC_SECRET</code>；<code>SERVICE_TOKEN</code> 仅用于容器内网的 <code>/internal/**</code> 回调。演示环境沿用示例值即可。</p>
+</blockquote>
+<h3 id="23">2.3 国内网络说明（首次构建）</h3>
+<p>Dockerfile 已内置国内源，无需额外配置即可在国内网络构建：</p>
+<ul>
+<li>Maven 依赖 → 阿里云 maven 镜像；pip → 清华源；容器内 apt → 阿里云 Debian/Ubuntu 源；</li>
+<li>若 <strong>Docker Hub 拉基础镜像超时</strong>，在 Docker Desktop 的 <code>daemon.json</code> 增加镜像加速器后重启 Docker：</li>
+</ul>
+<pre><code class="language-json">{
+  &quot;registry-mirrors&quot;: [
+    &quot;https://docker.m.daocloud.io&quot;,
+    &quot;https://dockerproxy.net&quot;
+  ]
+}
+</code></pre>
+<hr />
+<h2 id="3">3. 一键部署</h2>
+<pre><code class="language-bash">cd mydatama
+cp .env.example .env            # Windows PowerShell: copy .env.example .env
+
+docker compose up -d --build    # 首次构建约 5–10 分钟（依赖已缓存后秒级）
+docker compose ps               # 等待 4 个容器全部 healthy
+</code></pre>
+<p>首次启动自动完成：</p>
+<ol>
+<li>PostgreSQL 建库 + 扩展（pg_trgm / PostGIS）+ 五 schema 全部表/索引（<code>infra/postgres/init/01~07.sql</code>）；</li>
+<li>种子数据：3 个账号、34 个权限点、角色策略、3 个产品模板；</li>
+<li><code>/data</code> 下 raw / processed / thumb / products 目录由服务按需创建。</li>
+</ol>
+<p><strong>从启动到可登录 ≤ 3 分钟</strong>（不含首次构建）。浏览器访问 <strong>http://localhost:8090</strong>。</p>
+<p>常用命令：</p>
+<pre><code class="language-bash">docker compose logs -f platform-app processing-app   # 看服务日志
+docker compose restart processing-app                # 演示&quot;任务不丢&quot;：重启自动续跑
+docker compose stop / start                          # 停/启（保留数据）
+docker compose down                                  # 删容器保留数据卷
+docker compose down -v                               # 恢复出厂（连数据卷一起删）
+</code></pre>
+<hr />
+<h2 id="4">4. 启动顺序与健康检查</h2>
+<pre><code class="language-mermaid">flowchart LR
+    PG[&quot;postgres healthy&quot;] --&gt; J[&quot;platform-app&lt;br/&gt;(等待 PG，Spring Boot 启动)&quot;]
+    PG --&gt; P[&quot;processing-app&lt;br/&gt;(等待 PG，启动 2 worker)&quot;]
+    J --&gt; NG[&quot;portal-nginx healthy&quot;]
+    P --&gt; NG
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>容器</th>
+<th>检查方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>postgres</td>
+<td><code>pg_isready</code></td>
+</tr>
+<tr>
+<td>platform-app</td>
+<td><code>GET /actuator/health</code> → <code>{"code":0,"message":"success","data":{"status":"UP"}}</code></td>
+</tr>
+<tr>
+<td>processing-app</td>
+<td><code>GET /health</code> → <code>{"code":0,...,"data":{"status":"UP"}}</code></td>
+</tr>
+<tr>
+<td>portal-nginx</td>
+<td>容器内 <code>wget http://127.0.0.1:8090/</code>，依赖前两个服务 healthy 后才启动</td>
+</tr>
+</tbody>
+</table>
+<p>手工验证：</p>
+<pre><code class="language-bash">curl http://localhost:8080/actuator/health     # Java
+curl http://localhost:8000/health              # Python
+curl -I http://localhost:8090/                 # 门户 200
+docker stats --no-stream                       # 实时确认内存合计
+</code></pre>
+<h3 id="41">4.1 预置账号</h3>
+<table>
+<thead>
+<tr>
+<th>账号</th>
+<th>密码</th>
+<th>部门/密级</th>
+<th>角色定位</th>
+<th>演示用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>admin</strong></td>
+<td><code>Admin@123</code></td>
+<td>IT / 密级 4</td>
+<td>管理员（RBAC 直通）</td>
+<td>全功能主演示账号</td>
+</tr>
+<tr>
+<td><strong>operator</strong></td>
+<td><code>Operator@123</code></td>
+<td>DATA / 密级 3</td>
+<td>运营</td>
+<td>上传处理、数据集与产品加工</td>
+</tr>
+<tr>
+<td><strong>viewer</strong></td>
+<td><code>Viewer@123</code></td>
+<td>GUEST / 密级 1</td>
+<td>只读</td>
+<td>演示越权 403 / ABAC 拦截</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42">4.2 预置产品模板</h3>
+<table>
+<thead>
+<tr>
+<th>模板 code</th>
+<th>形态</th>
+<th>生成物</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tpl-data-package-v1</code></td>
+<td>DATA_PACKAGE</td>
+<td>产品包 zip（数据成品 + README + 质量报告 + PDF 说明书，SHA-256 校验）</td>
+</tr>
+<tr>
+<td><code>tpl-api-service-v1</code></td>
+<td>API_SERVICE</td>
+<td>开放查询端点 <code>/openapi/v1/products/{code}/rows</code> + 计量 API Key</td>
+</tr>
+<tr>
+<td><code>tpl-report-v1</code></td>
+<td>REPORT</td>
+<td>分析报告 HTML + PDF</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-15-1520">5. 演示指南：标准 15 步动线（15–20 分钟）</h2>
+<blockquote>
+<p>本脚本与 SYS-007 §2.2 逐条对应，覆盖 IAM → PROC → GOV → DS → PROD → SCR 六模块。
+主演示账号 <strong>admin</strong>；样例文件全部在 <code>samples/</code>（由固定种子生成，异常注入点见 <a href="../samples/README.md">samples/README.md</a>）。</p>
+</blockquote>
+<h3 id="51-2">5.1 演示前准备（2 分钟）</h3>
+<ol>
+<li><code>docker compose ps</code> 确认 4 容器全部 healthy；浏览器 <strong>Ctrl+F5</strong> 打开 http://localhost:8090；</li>
+<li>确认 <code>samples/</code> 目录就位（首次或重置后执行 <code>python samples/generator/generate_all.py</code> 生成）；</li>
+<li>建议浏览器提前登录一次 admin 保持会话，大屏页 F11 全屏备用。</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>页面/动作</th>
+<th>操作与看点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1. 登录 + 大屏空态</strong></td>
+<td><code>/login</code> → <code>/screen</code></td>
+<td>admin 登录（JWT 下发），大屏显示骨架与全 0 空态（资产/文件/数据集/产品计数）；换 viewer 登录后访问「用户管理」被 <strong>403 拦截</strong>（RBAC）</td>
+</tr>
+<tr>
+<td><strong>2. 上传结构化文件</strong></td>
+<td>「文件上传」</td>
+<td>上传 <code>vehicle_gps_20260901.csv</code>（5 万行/5.3MB，业务域 TRANSPORT，密级 2），看点：入队后五阶段时间线（接收→质检→脱敏→加工→登记）<strong>逐格点亮</strong>，5 万行全链路 &lt; 60s</td>
+</tr>
+<tr>
+<td><strong>3. 查看质检结果</strong></td>
+<td>「文件详情」</td>
+<td>metrics 表：缺失率 ≈2%（1000 行）、重复率 1%（500 行）、漂移点 50 条入隔离、时间乱序 20 条归一；敏感列清单（driver_phone / driver_idcard）与掩码策略</td>
+</tr>
+<tr>
+<td><strong>4. 一键修复 → 重跑</strong></td>
+<td>「文件详情」</td>
+<td>对坏行执行一键修复/去重后重入队，处理完成后对比指标：缺失/重复归零，质量分回升——展示<strong>质量闭环</strong></td>
+</tr>
+<tr>
+<td><strong>5. 多模态脱敏</strong></td>
+<td>「文件上传」×3</td>
+<td><code>driver_notes.txt</code>（手机/邮箱/身份证正则掩码，命中计数）；<code>vehicle_photos.zip</code>（EXIF/GPS 剥离 + 缩略图）；<code>dashcam_clips.zip</code>（ffmpeg 抽帧缩略图、元数据清除、mp4 转码）</td>
+</tr>
+<tr>
+<td><strong>6. 资产目录 + 血缘</strong></td>
+<td><code>/governance/assets</code> → 详情 → 血缘图</td>
+<td>上传文件自动入资产目录（处理服务回调 <code>/internal/assets/register</code> 幂等登记）；按模态/业务域/关键词检索；详情看字段级敏感标记；血缘图展示 <strong>raw → processed</strong> 自动边，ECharts 力导图可缩放</td>
+</tr>
+<tr>
+<td><strong>7. 热力图 + 质量规则</strong></td>
+<td><code>/governance/heatmap</code>、<code>/governance/quality-rules</code></td>
+<td>域 × 日热力图（资产使用统计聚合，ECharts 三维格式）；质量规则页按 targetRef 查询</td>
+</tr>
+<tr>
+<td><strong>8. 构建数据集 v1</strong></td>
+<td><code>/dataset/list</code> 向导</td>
+<td>新建「驾驶行为样本集」：筛选条件 modality=STRUCTURED、bizDomain=TRANSPORT、minQualityScore 等；生成版本 v1，展示<strong>三维质检报告</strong>：completeness / consistency / accuracy + overall_score（≥0.85 达标判定）与中文建议</td>
+</tr>
+<tr>
+<td><strong>9. 生成 v2 + 版本对比</strong></td>
+<td>数据集详情</td>
+<td>上传 <code>vehicle_gps_20260902.csv</code>（<strong>GBK 编码 + 中文乱序列名</strong>，看点：编码探测 + 列名同义词标准化映射）处理完成后，对同一数据集生成 v2；双选 v1/v2 对比：added / removed 资产清单 + metricsDiff 指标差</td>
+</tr>
+<tr>
+<td><strong>10. 产品配置</strong></td>
+<td><code>/product/create</code></td>
+<td>三步向导：选 <code>tpl-data-package-v1</code> 模板 → 选数据集与 v2 版本（级联下拉）→ 填元数据（名称、编码 <code>PRD-20261001-001</code>、分类交通物流、密级 ≥ 原料最大密级、定价、说明书四要素：来源/字段/更新频率/交付方式），提交后状态 DRAFT → CONFIGURED</td>
+</tr>
+<tr>
+<td><strong>11. 生成 + 合规通过</strong></td>
+<td>产品详情</td>
+<td>点「生成」：zip 打包秒级完成并登记 PRODUCT 资产 + 血缘边（dataset → product）；点「合规校验」：<strong>R1 密级 / R2 敏感列脱敏 / R3 质量阈值 0.85 / R4 说明书完整</strong> 四规则全绿，状态 PASSED；「说明书预览」展示八章交易所口径 HTML，可导 PDF（内嵌中文字体）</td>
+</tr>
+<tr>
+<td><strong>12. 导出交付物</strong></td>
+<td>产品详情「导出」</td>
+<td>下载 <code>product_{code}_v1.0.zip</code>（含成品数据 + README.txt + quality_report.json + manual.pdf），响应头带 <code>X-Checksum-SHA256</code>；API_SERVICE 形态可在此演示计量 Key 创建（明文仅返回一次）</td>
+</tr>
+<tr>
+<td><strong>13. 反面演示：合规拦阻</strong></td>
+<td>再建一个产品</td>
+<td>上传 <code>unmasked_sample.csv</code>（全字段明文），建产品时刻意<strong>密级倒挂</strong>或直接使用未脱敏原料 → 合规校验 <strong>R1/R2 红色并列</strong>，产品状态 BLOCKED，逐项给出原因文案——演示"合规内生、不合规不可挂牌"</td>
+</tr>
+<tr>
+<td><strong>14. 登记 + 挂牌</strong></td>
+<td>产品详情</td>
+<td>PASSED 产品点「登记」生成凭证号 <code>REG-20261001-XXXXXX</code>（状态 REGISTERED）→「挂牌」LISTED；切到大屏产品板块：总数/挂牌数/拦阻数/通过率/形态分布/最新 5 条实时跳动（10s 轮询）</td>
+</tr>
+<tr>
+<td><strong>15. 审计回放</strong></td>
+<td><code>/iam/audit</code></td>
+<td>按用户/模块/时间检索全程操作（登录、上传、导出 EXPORT、登记、挂牌……），可导出 CSV——等保闭环收尾</td>
+</tr>
+</tbody>
+</table>
+<p><strong>补刀亮点（按需插入）</strong>：</p>
+<ul>
+<li><strong>开放 API</strong>：API_SERVICE 形态产品挂牌后，在 <code>/openapi-demo</code> 页用 <code>X-API-Key</code> 调用 <code>/openapi/v1/products/{code}/rows</code> 分页取数（Key 校验 + 状态门控 + 调用量写入 asset_usage_stats，反哺第 7 步热力图）；</li>
+<li><strong>可靠性</strong>：大文件处理中执行 <code>docker compose restart processing-app</code>，任务不丢、自动续跑至 SUCCEEDED（PG 队列 + 锁超时 10 分钟重置）。</li>
+</ul>
+<h3 id="52-t01t10">5.2 一键冒烟（接口级 T01~T10）</h3>
+<pre><code class="language-bash">bash scripts/smoke-test.sh
+# Windows 用 Git Bash；可用 BASE=http://localhost:8090 指定网关
+# 覆盖：登录 → 上传 → 轮询 READY → 资产检索 → 建数据集版本 → 建产品 → 合规 → 挂牌 → 大屏断言 → 审计断言
+</code></pre>
+<p>全绿即代表演示环境就绪。</p>
+<hr />
+<h2 id="6">6. 备份与恢复</h2>
+<p>演示环境只需备份两样：</p>
+<pre><code class="language-bash"># 1) 数据库逻辑备份（账号/库名取自 .env，默认 mydatama）
+docker compose exec postgres pg_dump -U mydatama mydatama &gt; backup/mydatama_$(date +%F).sql
+
+# 2) 文件卷备份（raw/processed/thumb/products）
+docker run --rm -v mydatama_mydatama-data:/data -v $PWD/backup:/backup alpine \
+  tar czf /backup/files_$(date +%F).tgz -C /data .
+</code></pre>
+<p>恢复：<code>docker compose down</code> 后重建容器，<code>psql</code> 导入 SQL + 解压文件卷即可完整还原。</p>
+<p><strong>空态重置</strong>（每场演示前推荐）：</p>
+<pre><code class="language-bash">docker compose down -v &amp;&amp; docker compose up -d --build
+</code></pre>
+<hr />
+<h2 id="7">7. 离线/内网部署</h2>
+<ol>
+<li>有网机拉取/构建全部镜像：<code>postgis/postgis:16-3.4</code>、<code>nginx:1.27-alpine</code> 及两个本地构建镜像；</li>
+<li><code>docker save</code> 打包镜像连同仓库代码一并拷贝；</li>
+<li>内网机 <code>docker load</code> 后 <code>docker compose up -d</code>，全程不需要 Maven/npm/PyPI/外网（ffmpeg 与中文字体均已固化在镜像层内）。</li>
+</ol>
+<hr />
+<h2 id="8">8. 常见问题</h2>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8090 打不开 / 白屏</td>
+<td>先 <code>docker compose ps</code> 查 healthy；白屏多为浏览器缓存旧版前端，<strong>Ctrl+F5</strong> 强刷；仍异常则 <code>docker compose logs portal-nginx</code></td>
+</tr>
+<tr>
+<td>Docker Hub 拉镜像超时</td>
+<td>按 §2.3 配置 <code>registry-mirrors</code> 后重启 Docker Desktop</td>
+</tr>
+<tr>
+<td>平台日志报 jsonb 错误</td>
+<td>确认数据源 URL 含 <code>?stringtype=unspecified</code>（compose 已内置，自行改配置时勿删）</td>
+</tr>
+<tr>
+<td>登录提示"用户名或密码错误"</td>
+<td>V0.1 种子密码为 Admin@123 / Operator@123 / Viewer@123；若曾使用更早版本的库卷，执行 <code>docker compose down -v</code> 重置</td>
+</tr>
+<tr>
+<td>任务卡 PENDING</td>
+<td>查 processing-app 日志与 PG 连通性；worker 每 2s 轮询自动抢任务</td>
+</tr>
+<tr>
+<td>重启后任务一直 RUNNING</td>
+<td>worker 启动时把锁超 10 分钟的 RUNNING 重置回 PENDING，等待或手工改状态均可</td>
+</tr>
+<tr>
+<td>GBK CSV / 中文列名</td>
+<td>0902 样例已覆盖：服务自动探测编码并做列名同义词映射，文件详情可看标准化结果</td>
+</tr>
+<tr>
+<td>PDF 说明书中文乱码</td>
+<td>镜像已安装中文字体；如自行精简镜像，保留 fonts-droid-fallback 或挂载 Noto Sans CJK</td>
+</tr>
+<tr>
+<td>开放 API 返回 Key 无效</td>
+<td>Key 明文仅创建时返回一次；确认请求头 <code>X-API-Key</code> 且产品状态为 PASSED/REGISTERED/LISTED</td>
+</tr>
+<tr>
+<td>内存吃紧</td>
+<td>确认 core 四容器预算（≤2.5GB）；WSL2 在 <code>%UserProfile%\.wslconfig</code> 设 <code>memory=6GB</code></td>
+</tr>
+<tr>
+<td>恢复出厂</td>
+<td><code>docker compose down -v</code> 后重新 <code>up -d --build</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-v01">9. 生产化提示（超出 V0.1）</h2>
+<p>V0.1 已保留模块化边界：worker 独立扩缩容 → 文件卷换对象存储（MinIO/S3/OSS）→ Java 模块拆微服务并引入网关与注册中心 → 队列换 Kafka → 检索换 ES → Compose 迁 K8s。演进路线详见 SYS-001~006 与 05-MVP功能演示开发工作方案。</p>
+  </main>
+</div>
+<script>
+// 移动端：点击目录链接后自动收起抽屉
+document.querySelectorAll('.toc a').forEach(function(a){
+  a.addEventListener('click',function(){document.querySelector('.toc').classList.remove('open');});
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+// 初始化 Mermaid 图表渲染
+if (window.mermaid) {
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  // 将 fenced code block 的 mermaid 代码转换为 mermaid div
+  document.querySelectorAll('pre code.language-mermaid').forEach(function(block) {
+    var pre = block.parentElement;
+    var div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = block.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.run();
+}
+</script>
+</body>
+</html>
