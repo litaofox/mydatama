@@ -1,0 +1,32 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: platform-app
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/mydatama?stringtype=unspecified}
+    username: ${SPRING_DATASOURCE_USERNAME:mydatama}
+    password: ${SPRING_DATASOURCE_PASSWORD:mydatama}
+    hikari:
+      maximum-pool-size: 10
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+mydatama:
+  jwt:
+    secret: ${JWT_HMAC_SECRET:change-me-dev-secret}
+  service-token: ${SERVICE_TOKEN:change-me-service-token}
+  data-dir: ${STORAGE_ROOT:/data}
