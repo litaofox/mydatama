@@ -44,6 +44,67 @@ def _escape_like(kw: str) -> str:
     return kw.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
+# 前端统一 camelCase 契约；DB 内任务成功态为 SUCCEEDED，前端使用 SUCCESS
+_JOB_STATUS_OUT = {"SUCCEEDED": "SUCCESS"}
+
+
+def _file_out(r: dict) -> dict:
+    """ORM 行 → 前端 ProcFile/ProcFileDetail 契约（camelCase + 字段改名）。"""
+    return {
+        "id": r["id"],
+        "name": r.get("file_name"),
+        "modality": r.get("modality"),
+        "format": r.get("format"),
+        "bizDomain": r.get("biz_domain"),
+        "sizeBytes": r.get("size_bytes"),
+        "secretLevel": r.get("secret_level"),
+        "status": r.get("status"),
+        "createdAt": r.get("created_at"),
+        "storagePath": r.get("raw_path"),
+        "processedPath": r.get("processed_path"),
+        "thumbPath": r.get("thumb_path"),
+        "qualityMetrics": r.get("meta") or {},
+    }
+
+
+def _job_view(file_id: int) -> dict | None:
+    """聚合该文件全部任务行：五阶段指标合并、脱敏列从 MASK 指标提取、状态名转前端契约。"""
+    rows = db.query_all(
+        "SELECT id, stage, status, metrics, mask_columns, error_msg, retry_count, updated_at "
+        "FROM proc.job_queue WHERE file_id=%s AND deleted=0 ORDER BY id ASC",
+        (file_id,),
+    )
+    if not rows:
+        return None
+    latest = rows[-1]
+    metrics: dict = {}
+    mask_cols: list[str] = []
+    for row in rows:
+        m = row.get("metrics") or {}
+        metrics.update(m)
+        mask_metric = m.get("MASK") if isinstance(m.get("MASK"), dict) else None
+        if not mask_metric:
+            mask_metric = m
+        for item in mask_metric.get("maskColumns", []) or []:
+            col = item.get("col") if isinstance(item, dict) else str(item)
+            if col and col not in mask_cols:
+                mask_cols.append(col)
+        if row.get("mask_columns"):
+            for col in row["mask_columns"]:
+                if col not in mask_cols:
+                    mask_cols.append(col)
+    return {
+        "jobId": latest["id"],
+        "stage": latest.get("stage"),
+        "status": _JOB_STATUS_OUT.get(latest.get("status"), latest.get("status")),
+        "retryCount": latest.get("retry_count") or 0,
+        "metrics": metrics,
+        "maskColumns": mask_cols or None,
+        "error": latest.get("error_msg"),
+        "updatedAt": latest.get("updated_at"),
+    }
+
+
 def _get_file_or_raise(file_id: int) -> dict:
     f = db.query_one(f"SELECT {_FILE_SELECT} FROM proc.data_files WHERE id=%s", (file_id,))
     if not f:
@@ -154,7 +215,7 @@ def list_files(page: int = Query(1, ge=1), size: int = Query(10, ge=1, le=100),
         f"FROM proc.data_files WHERE {where_sql} ORDER BY id DESC LIMIT %s OFFSET %s",
         tuple(params) + (size, (page - 1) * size),
     )
-    return ok({"total": total, "list": rows})
+    return ok({"total": total, "list": [_file_out(r) for r in rows]})
 
 
 # ---------- 3. 详情 ----------
@@ -173,12 +234,11 @@ def _quarantine_count(f: dict) -> int:
 @router.get("/api/processing/files/{file_id}")
 def get_file(file_id: int, claims: dict = Depends(require_auth)) -> dict:
     f = _get_file_or_raise(file_id)
-    job = db.query_one(
-        "SELECT id AS job_id, stage, status, metrics, mask_columns, error_msg, retry_count, updated_at "
-        "FROM proc.job_queue WHERE file_id=%s AND deleted=0 ORDER BY id DESC LIMIT 1",
-        (file_id,),
-    )
-    data = {**f, "meta": f.get("meta"), "latestJob": job, "quarantineCount": _quarantine_count(f)}
+    job_view = _job_view(file_id)
+    data = _file_out(f)
+    data["latestJob"] = job_view
+    data["maskColumns"] = (job_view or {}).get("maskColumns") or []
+    data["quarantineCount"] = _quarantine_count(f)
     return ok(data)
 
 
@@ -199,19 +259,10 @@ def repair_file(file_id: int, claims: dict = Depends(require_auth)) -> dict:
 @router.get("/api/processing/files/{file_id}/job")
 def get_job(file_id: int, claims: dict = Depends(require_auth)) -> dict:
     _get_file_or_raise(file_id)
-    job = db.query_one(
-        "SELECT id, stage, status, retry_count, metrics, mask_columns, error_msg, updated_at "
-        "FROM proc.job_queue WHERE file_id=%s AND deleted=0 ORDER BY id DESC LIMIT 1",
-        (file_id,),
-    )
-    if not job:
+    view = _job_view(file_id)
+    if not view:
         raise ApiError(ERR_NOT_FOUND, "该文件暂无处理任务")
-    return ok({
-        "jobId": job["id"], "stage": job["stage"], "status": job["status"],
-        "retryCount": job["retry_count"], "metrics": job.get("metrics"),
-        "maskColumns": job.get("mask_columns"), "error": job.get("error_msg"),
-        "updatedAt": job.get("updated_at"),
-    })
+    return ok(view)
 
 
 # ---------- 7. 下载（ABAC 细粒度鉴权） ----------
